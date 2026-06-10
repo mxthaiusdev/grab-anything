@@ -1,0 +1,185 @@
+{
+ "appName": {
+  "message": "Grab Anything"
+ },
+ "appDesc": {
+  "message": "Clique com o botão direito ou aponte e escolha para baixar qualquer coisa: imagens em qualidade máxima, logos, fontes, vídeos e designs inteiros."
+ },
+ "cmdPicker": {
+  "message": "Escolher o que capturar (seletor de elementos)"
+ },
+ "menuPicker": {
+  "message": "Escolher o que capturar…"
+ },
+ "menuImage": {
+  "message": "Baixar imagem"
+ },
+ "menuVideo": {
+  "message": "Baixar vídeo"
+ },
+ "menuAudio": {
+  "message": "Baixar áudio"
+ },
+ "menuLink": {
+  "message": "Baixar arquivo do link"
+ },
+ "menuSelection": {
+  "message": "Salvar texto selecionado"
+ },
+ "menuPage": {
+  "message": "Salvar página inteira"
+ },
+ "menuShotPage": {
+  "message": "Capturar tela da página inteira"
+ },
+ "popupPick": {
+  "message": "Selecionar elemento"
+ },
+ "popupShot": {
+  "message": "Capturar página"
+ },
+ "popupColors": {
+  "message": "Cores"
+ },
+ "popupFonts": {
+  "message": "Fontes"
+ },
+ "popupReview": {
+  "message": "Curtindo o Grab Anything?"
+ },
+ "popupReviewLink": {
+  "message": "Deixe uma avaliação ★"
+ },
+ "popupEmptyTitle": {
+  "message": "Nada capturado nesta página ainda."
+ },
+ "popupEmptyBody": {
+  "message": "Recarregue a página e abra este popup de novo."
+ },
+ "groupImages": {
+  "message": "Imagens"
+ },
+ "groupMedia": {
+  "message": "Vídeo e áudio"
+ },
+ "groupStreams": {
+  "message": "Playlists de stream (avançado)"
+ },
+ "groupFonts": {
+  "message": "Fontes"
+ },
+ "groupOther": {
+  "message": "Outros arquivos"
+ },
+ "zipSelected": {
+  "message": "ZIP dos selecionados"
+ },
+ "zipAll": {
+  "message": "ZIP de todas as imagens"
+ },
+ "downloadAll": {
+  "message": "tudo"
+ },
+ "streamHint": {
+  "message": "Playlists descrevem vídeo em streaming — use uma com ffmpeg ou yt-dlp onde o site permitir."
+ },
+ "noAccess": {
+  "message": "Esta página não permite extensões (tente um site comum)."
+ },
+ "statusFetching": {
+  "message": "Buscando"
+ },
+ "statusZipping": {
+  "message": "Compactando"
+ },
+ "statusSaved": {
+  "message": "Salvo"
+ },
+ "statusNothing": {
+  "message": "Não foi possível baixar nada."
+ },
+ "optDownloads": {
+  "message": "Downloads"
+ },
+ "optExtras": {
+  "message": "Extras do botão direito"
+ },
+ "optSubfolder": {
+  "message": "Salvar em uma pasta Grab Anything"
+ },
+ "optSubfolderSmall": {
+  "message": "Mantém as capturas fora da raiz da pasta Downloads (vale para downloads por URL)"
+ },
+ "optConvert": {
+  "message": "Salvar imagens WebP/AVIF como"
+ },
+ "optConvertSmall": {
+  "message": "Converte os formatos que apps de fotos costumam não abrir"
+ },
+ "optConvertPng": {
+  "message": "PNG"
+ },
+ "optConvertJpg": {
+  "message": "JPG"
+ },
+ "optConvertOff": {
+  "message": "Manter formato original"
+ },
+ "optToasts": {
+  "message": "Mostrar avisos na página"
+ },
+ "optToastsSmall": {
+  "message": "Explica por que um download falhou, em vez de falhar em silêncio"
+ },
+ "optSniffer": {
+  "message": "Capturar a mídia da página para o popup da barra de ferramentas"
+ },
+ "optSnifferSmall": {
+  "message": "Observa as requisições de rede desta página para o popup listar cada imagem, fonte e vídeo carregados. Nada sai do seu computador."
+ },
+ "optSvg": {
+  "message": "Logos e gráficos (SVG)"
+ },
+ "optBg": {
+  "message": "Imagens de fundo"
+ },
+ "optFonts": {
+  "message": "Fontes usadas na página"
+ },
+ "optCanvas": {
+  "message": "Desenhos (canvas) como imagens"
+ },
+ "optComponents": {
+  "message": "Itens \"Salvar design\""
+ },
+ "optComponentsSmall": {
+  "message": "Salve a barra de menu / hero / seção sob o cursor como uma página web funcional que você pode abrir e estudar"
+ },
+ "obTagline": {
+  "message": "Se você consegue ver, consegue salvar."
+ },
+ "obStep1H": {
+  "message": "Clique com o botão direito em qualquer coisa"
+ },
+ "obStep1P": {
+  "message": "Imagens são baixadas na <b>melhor qualidade que o site oferece</b> — não a miniatura encolhida. No texto, você vê a fonte usada. Logos saem como SVG nítido. Menus, seções hero e rodapés viram arquivos de design funcionais."
+ },
+ "obStep2H": {
+  "message": "Aponte e capture com o seletor"
+ },
+ "obStep2P": {
+  "message": "Pressione <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> (ou botão direito → <i>Escolher o que capturar</i>). Mova o mouse para destacar qualquer coisa, role para ampliar a seleção e clique para salvar como imagem ou arquivo de design."
+ },
+ "obStep3H": {
+  "message": "Veja tudo o que a página carregou"
+ },
+ "obStep3P": {
+  "message": "Fixe o ícone na barra de ferramentas e clique nele em qualquer página: cada imagem, vídeo e fonte que a página buscou — baixe um item ou todos de uma vez num único ZIP. E ainda paleta de cores e cards de fontes com um clique."
+ },
+ "obCta": {
+  "message": "Experimente ao vivo numa página cheia de fotos →"
+ },
+ "obNote": {
+  "message": "Tudo roda no seu dispositivo — sem contas, sem rastreamento, nada sai do seu computador. Streams de vídeo protegidos (YouTube, Netflix) não podem ser salvos; é uma regra do navegador inteiro, não um recurso faltando."
+ }
+}

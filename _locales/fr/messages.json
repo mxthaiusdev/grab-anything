@@ -1,0 +1,185 @@
+{
+ "appName": {
+  "message": "Grab Anything"
+ },
+ "appDesc": {
+  "message": "Clic droit ou pointer-cliquer pour tout télécharger : images en pleine qualité, logos, polices, vidéo, designs entiers."
+ },
+ "cmdPicker": {
+  "message": "Choisir quoi capturer (sélecteur d'élément)"
+ },
+ "menuPicker": {
+  "message": "Choisir quoi capturer…"
+ },
+ "menuImage": {
+  "message": "Télécharger l'image"
+ },
+ "menuVideo": {
+  "message": "Télécharger la vidéo"
+ },
+ "menuAudio": {
+  "message": "Télécharger l'audio"
+ },
+ "menuLink": {
+  "message": "Télécharger le fichier lié"
+ },
+ "menuSelection": {
+  "message": "Enregistrer le texte sélectionné"
+ },
+ "menuPage": {
+  "message": "Enregistrer la page entière"
+ },
+ "menuShotPage": {
+  "message": "Capture d'écran de la page entière"
+ },
+ "popupPick": {
+  "message": "Choisir un élément"
+ },
+ "popupShot": {
+  "message": "Capturer la page"
+ },
+ "popupColors": {
+  "message": "Couleurs"
+ },
+ "popupFonts": {
+  "message": "Polices"
+ },
+ "popupReview": {
+  "message": "Vous aimez Grab Anything ?"
+ },
+ "popupReviewLink": {
+  "message": "Laisser un avis ★"
+ },
+ "popupEmptyTitle": {
+  "message": "Rien de capturé sur cette page pour l'instant."
+ },
+ "popupEmptyBody": {
+  "message": "Rechargez la page, puis rouvrez ce pop-up."
+ },
+ "groupImages": {
+  "message": "Images"
+ },
+ "groupMedia": {
+  "message": "Vidéo et audio"
+ },
+ "groupStreams": {
+  "message": "Playlists de streaming (avancé)"
+ },
+ "groupFonts": {
+  "message": "Polices"
+ },
+ "groupOther": {
+  "message": "Autres fichiers"
+ },
+ "zipSelected": {
+  "message": "Sélection en ZIP"
+ },
+ "zipAll": {
+  "message": "Toutes les images en ZIP"
+ },
+ "downloadAll": {
+  "message": "tout"
+ },
+ "streamHint": {
+  "message": "Les playlists décrivent une vidéo en streaming — passez-en une à ffmpeg ou yt-dlp là où le site l'autorise."
+ },
+ "noAccess": {
+  "message": "Cette page n'autorise pas les extensions (essayez un site web classique)."
+ },
+ "statusFetching": {
+  "message": "Récupération"
+ },
+ "statusZipping": {
+  "message": "Compression"
+ },
+ "statusSaved": {
+  "message": "Enregistré"
+ },
+ "statusNothing": {
+  "message": "Rien n'a pu être récupéré."
+ },
+ "optDownloads": {
+  "message": "Téléchargements"
+ },
+ "optExtras": {
+  "message": "Extras du clic droit"
+ },
+ "optSubfolder": {
+  "message": "Enregistrer dans un dossier Grab Anything"
+ },
+ "optSubfolderSmall": {
+  "message": "Évite d'encombrer la racine de vos Téléchargements (s'applique aux téléchargements par URL)"
+ },
+ "optConvert": {
+  "message": "Enregistrer les images WebP/AVIF en"
+ },
+ "optConvertSmall": {
+  "message": "Convertit les formats que les applis photo refusent souvent d'ouvrir"
+ },
+ "optConvertPng": {
+  "message": "PNG"
+ },
+ "optConvertJpg": {
+  "message": "JPG"
+ },
+ "optConvertOff": {
+  "message": "Conserver le format d'origine"
+ },
+ "optToasts": {
+  "message": "Afficher les notifications sur la page"
+ },
+ "optToastsSmall": {
+  "message": "Explique pourquoi un téléchargement a échoué au lieu d'échouer en silence"
+ },
+ "optSniffer": {
+  "message": "Capturer les médias de la page pour le pop-up de la barre d'outils"
+ },
+ "optSnifferSmall": {
+  "message": "Surveille les requêtes réseau de cette page pour que le pop-up liste chaque image, police et vidéo chargée. Rien ne quitte votre machine."
+ },
+ "optSvg": {
+  "message": "Logos et graphiques (SVG)"
+ },
+ "optBg": {
+  "message": "Images d'arrière-plan"
+ },
+ "optFonts": {
+  "message": "Polices utilisées sur la page"
+ },
+ "optCanvas": {
+  "message": "Dessins (canvas) en images"
+ },
+ "optComponents": {
+  "message": "Entrées « Enregistrer le design »"
+ },
+ "optComponentsSmall": {
+  "message": "Enregistre la barre de menu / le hero / la section sous le curseur comme une page web fonctionnelle à ouvrir et étudier"
+ },
+ "obTagline": {
+  "message": "Si vous le voyez, vous pouvez l'enregistrer."
+ },
+ "obStep1H": {
+  "message": "Clic droit sur n'importe quoi"
+ },
+ "obStep1P": {
+  "message": "Les images se téléchargent dans la <b>meilleure qualité disponible sur le site</b> — pas la miniature rétrécie. Le texte propose la police utilisée. Les logos s'enregistrent en fichiers SVG impeccables. Menus, sections hero et pieds de page s'enregistrent comme fichiers de design fonctionnels."
+ },
+ "obStep2H": {
+  "message": "Pointez et capturez avec le sélecteur"
+ },
+ "obStep2P": {
+  "message": "Appuyez sur <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>G</kbd> (ou clic droit → <i>Choisir quoi capturer</i>). Déplacez la souris pour surligner un élément, faites défiler pour élargir la sélection, cliquez pour l'enregistrer en image ou en fichier de design."
+ },
+ "obStep3H": {
+  "message": "Voyez tout ce qu'une page a chargé"
+ },
+ "obStep3P": {
+  "message": "Épinglez l'icône dans la barre d'outils, puis cliquez dessus sur n'importe quelle page : chaque image, vidéo et police chargée par la page — téléchargez-en une, ou toutes en un seul ZIP. Avec en plus, en un clic, la palette de couleurs et les fiches de polices."
+ },
+ "obCta": {
+  "message": "Essayez en direct sur une page pleine de photos →"
+ },
+ "obNote": {
+  "message": "Tout fonctionne sur votre appareil — pas de compte, aucun suivi, rien ne quitte votre machine. Les flux vidéo protégés (YouTube, Netflix) ne peuvent pas être enregistrés ; c'est une règle du navigateur, pas une fonctionnalité manquante."
+ }
+}

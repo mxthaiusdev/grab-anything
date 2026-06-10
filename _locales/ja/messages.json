@@ -1,0 +1,185 @@
+{
+ "appName": {
+  "message": "Grab Anything"
+ },
+ "appDesc": {
+  "message": "右クリックまたはポイント&クリックで何でもダウンロード:フル画質の画像、ロゴ、フォント、動画、デザインまるごと。"
+ },
+ "cmdPicker": {
+  "message": "保存するものを選ぶ(要素ピッカー)"
+ },
+ "menuPicker": {
+  "message": "保存するものを選ぶ…"
+ },
+ "menuImage": {
+  "message": "画像をダウンロード"
+ },
+ "menuVideo": {
+  "message": "動画をダウンロード"
+ },
+ "menuAudio": {
+  "message": "音声をダウンロード"
+ },
+ "menuLink": {
+  "message": "リンク先のファイルをダウンロード"
+ },
+ "menuSelection": {
+  "message": "選択したテキストを保存"
+ },
+ "menuPage": {
+  "message": "ページ全体を保存"
+ },
+ "menuShotPage": {
+  "message": "ページ全体をスクリーンショット"
+ },
+ "popupPick": {
+  "message": "要素を選択"
+ },
+ "popupShot": {
+  "message": "ページをスクショ"
+ },
+ "popupColors": {
+  "message": "カラー"
+ },
+ "popupFonts": {
+  "message": "フォント"
+ },
+ "popupReview": {
+  "message": "Grab Anything、気に入っていただけましたか?"
+ },
+ "popupReviewLink": {
+  "message": "レビューを書く ★"
+ },
+ "popupEmptyTitle": {
+  "message": "このページではまだ何もキャプチャされていません。"
+ },
+ "popupEmptyBody": {
+  "message": "ページを再読み込みして、このポップアップを開き直してください。"
+ },
+ "groupImages": {
+  "message": "画像"
+ },
+ "groupMedia": {
+  "message": "動画と音声"
+ },
+ "groupStreams": {
+  "message": "ストリーミングプレイリスト(上級者向け)"
+ },
+ "groupFonts": {
+  "message": "フォント"
+ },
+ "groupOther": {
+  "message": "その他のファイル"
+ },
+ "zipSelected": {
+  "message": "選択をZIP保存"
+ },
+ "zipAll": {
+  "message": "全画像をZIP保存"
+ },
+ "downloadAll": {
+  "message": "すべて"
+ },
+ "streamHint": {
+  "message": "プレイリストはストリーミング動画の構成情報です。サイトが許可する範囲で、ffmpeg や yt-dlp に渡して使えます。"
+ },
+ "noAccess": {
+  "message": "このページでは拡張機能が動作しません(通常のWebサイトでお試しください)。"
+ },
+ "statusFetching": {
+  "message": "取得中"
+ },
+ "statusZipping": {
+  "message": "ZIP作成中"
+ },
+ "statusSaved": {
+  "message": "保存しました"
+ },
+ "statusNothing": {
+  "message": "何も取得できませんでした。"
+ },
+ "optDownloads": {
+  "message": "ダウンロード"
+ },
+ "optExtras": {
+  "message": "右クリックメニューの追加項目"
+ },
+ "optSubfolder": {
+  "message": "Grab Anything フォルダに保存"
+ },
+ "optSubfolderSmall": {
+  "message": "ダウンロードフォルダの直下が散らかるのを防ぎます(URLからのダウンロードに適用)"
+ },
+ "optConvert": {
+  "message": "WebP/AVIF画像の保存形式"
+ },
+ "optConvertSmall": {
+  "message": "写真アプリで開けないことが多い形式を変換します"
+ },
+ "optConvertPng": {
+  "message": "PNG"
+ },
+ "optConvertJpg": {
+  "message": "JPG"
+ },
+ "optConvertOff": {
+  "message": "元の形式のまま"
+ },
+ "optToasts": {
+  "message": "ページ上に通知を表示"
+ },
+ "optToastsSmall": {
+  "message": "ダウンロードに失敗したとき、黙って失敗せず理由を表示します"
+ },
+ "optSniffer": {
+  "message": "ツールバーポップアップ用にページのメディアをキャプチャ"
+ },
+ "optSnifferSmall": {
+  "message": "ページのネットワークリクエストを監視し、読み込まれた画像・フォント・動画をすべてポップアップに一覧表示します。データが外部に送られることはありません。"
+ },
+ "optSvg": {
+  "message": "ロゴ・グラフィック(SVG)"
+ },
+ "optBg": {
+  "message": "背景画像"
+ },
+ "optFonts": {
+  "message": "ページで使われているフォント"
+ },
+ "optCanvas": {
+  "message": "描画(canvas)を画像として保存"
+ },
+ "optComponents": {
+  "message": "「デザインを保存」の項目"
+ },
+ "optComponentsSmall": {
+  "message": "カーソル下のメニューバー/ヒーロー/セクションを、開いて研究できる動くWebページファイルとして保存します"
+ },
+ "obTagline": {
+  "message": "見えるものは、保存できる。"
+ },
+ "obStep1H": {
+  "message": "何でも右クリック"
+ },
+ "obStep1P": {
+  "message": "画像は縮小サムネイルではなく、<b>サイトが持つ最高画質</b>でダウンロード。テキストからは使用フォントを取得。ロゴはくっきりしたSVGファイルで保存。メニューやヒーロー、フッターは動くデザインファイルとして保存できます。"
+ },
+ "obStep2H": {
+  "message": "ピッカーで狙って保存"
+ },
+ "obStep2P": {
+  "message": "<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> を押すか、右クリック → <i>保存するものを選ぶ</i>。マウスを動かしてハイライトし、スクロールで選択範囲を広げ、クリックすれば画像またはデザインファイルとして保存されます。"
+ },
+ "obStep3H": {
+  "message": "ページが読み込んだすべてが見える"
+ },
+ "obStep3P": {
+  "message": "ツールバーアイコンをピン留めして、どのページでもクリック。ページが取得した画像・動画・フォントをすべて表示 — 1つずつでも、まとめて1つのZIPでもダウンロードできます。さらにワンクリックでカラーパレットとフォントカードも。"
+ },
+ "obCta": {
+  "message": "写真の多いページで実際に試す →"
+ },
+ "obNote": {
+  "message": "すべてあなたのデバイス上で動作します — アカウント不要、トラッキングなし、データが外部に送られることはありません。保護された動画ストリーム(YouTube、Netflix)は保存できません。これはブラウザ全体のルールであり、機能が足りないわけではありません。"
+ }
+}

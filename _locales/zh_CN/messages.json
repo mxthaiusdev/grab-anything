@@ -1,0 +1,185 @@
+{
+ "appName": {
+  "message": "Grab Anything"
+ },
+ "appDesc": {
+  "message": "右键或指点选取,下载网页上的任何内容:原画质图片、Logo、字体、视频,乃至整套页面设计。"
+ },
+ "cmdPicker": {
+  "message": "选取要抓取的内容(元素选择器)"
+ },
+ "menuPicker": {
+  "message": "选取要抓取的内容…"
+ },
+ "menuImage": {
+  "message": "下载图片"
+ },
+ "menuVideo": {
+  "message": "下载视频"
+ },
+ "menuAudio": {
+  "message": "下载音频"
+ },
+ "menuLink": {
+  "message": "下载链接指向的文件"
+ },
+ "menuSelection": {
+  "message": "保存选中的文本"
+ },
+ "menuPage": {
+  "message": "保存整个页面"
+ },
+ "menuShotPage": {
+  "message": "截取整个页面"
+ },
+ "popupPick": {
+  "message": "选取元素"
+ },
+ "popupShot": {
+  "message": "截取页面"
+ },
+ "popupColors": {
+  "message": "配色"
+ },
+ "popupFonts": {
+  "message": "字体"
+ },
+ "popupReview": {
+  "message": "喜欢 Grab Anything 吗?"
+ },
+ "popupReviewLink": {
+  "message": "留个好评 ★"
+ },
+ "popupEmptyTitle": {
+  "message": "此页面还没有捕获到任何内容。"
+ },
+ "popupEmptyBody": {
+  "message": "请刷新页面,然后重新打开此弹窗。"
+ },
+ "groupImages": {
+  "message": "图片"
+ },
+ "groupMedia": {
+  "message": "视频与音频"
+ },
+ "groupStreams": {
+  "message": "流媒体播放列表(高级)"
+ },
+ "groupFonts": {
+  "message": "字体"
+ },
+ "groupOther": {
+  "message": "其他文件"
+ },
+ "zipSelected": {
+  "message": "打包所选为 ZIP"
+ },
+ "zipAll": {
+  "message": "打包全部图片为 ZIP"
+ },
+ "downloadAll": {
+  "message": "全部"
+ },
+ "streamHint": {
+  "message": "播放列表描述的是流媒体视频——在网站允许的前提下,可将其交给 ffmpeg 或 yt-dlp 处理。"
+ },
+ "noAccess": {
+  "message": "此页面不允许运行扩展(请换一个普通网页试试)。"
+ },
+ "statusFetching": {
+  "message": "获取中"
+ },
+ "statusZipping": {
+  "message": "打包中"
+ },
+ "statusSaved": {
+  "message": "已保存"
+ },
+ "statusNothing": {
+  "message": "未能获取任何内容。"
+ },
+ "optDownloads": {
+  "message": "下载"
+ },
+ "optExtras": {
+  "message": "右键菜单附加项"
+ },
+ "optSubfolder": {
+  "message": "保存到 Grab Anything 文件夹"
+ },
+ "optSubfolderSmall": {
+  "message": "让抓取的文件不再散落在下载根目录(适用于 URL 下载)"
+ },
+ "optConvert": {
+  "message": "将 WebP/AVIF 图片保存为"
+ },
+ "optConvertSmall": {
+  "message": "自动转换照片应用常常打不开的格式"
+ },
+ "optConvertPng": {
+  "message": "PNG"
+ },
+ "optConvertJpg": {
+  "message": "JPG"
+ },
+ "optConvertOff": {
+  "message": "保留原始格式"
+ },
+ "optToasts": {
+  "message": "在页面上显示提示"
+ },
+ "optToastsSmall": {
+  "message": "下载失败时会说明原因,而不是无声无息地失败"
+ },
+ "optSniffer": {
+  "message": "为工具栏弹窗捕获页面媒体"
+ },
+ "optSnifferSmall": {
+  "message": "监听此页面的网络请求,让弹窗能列出页面加载的每张图片、每个字体和视频。所有数据都不会离开你的设备。"
+ },
+ "optSvg": {
+  "message": "Logo 与图形(SVG)"
+ },
+ "optBg": {
+  "message": "背景图片"
+ },
+ "optFonts": {
+  "message": "页面使用的字体"
+ },
+ "optCanvas": {
+  "message": "将画布绘图(canvas)保存为图片"
+ },
+ "optComponents": {
+  "message": "“保存设计”菜单项"
+ },
+ "optComponentsSmall": {
+  "message": "将光标所指的菜单栏 / 首屏 / 区块保存为可直接打开、可研究的网页文件"
+ },
+ "obTagline": {
+  "message": "看得见,就存得下。"
+ },
+ "obStep1H": {
+  "message": "右键点击任何内容"
+ },
+ "obStep1P": {
+  "message": "图片按<b>网站现有的最高画质</b>下载——而不是缩小的缩略图。点击文字可获取所用字体。Logo 会保存为清晰的 SVG 文件。菜单栏、首屏和页脚都能保存为可用的设计文件。"
+ },
+ "obStep2H": {
+  "message": "用选择器指哪抓哪"
+ },
+ "obStep2P": {
+  "message": "按 <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>(或右键 → <i>选取要抓取的内容</i>)。移动鼠标高亮任意内容,滚动可扩大选区,点击即可保存为图片或设计文件。"
+ },
+ "obStep3H": {
+  "message": "看清页面加载的所有内容"
+ },
+ "obStep3P": {
+  "message": "固定工具栏图标,在任意页面点击它:页面加载过的每张图片、每个视频和字体一目了然——可单个下载,也可一键打包成一个 ZIP。还有一键生成的配色和字体卡片。"
+ },
+ "obCta": {
+  "message": "去图片多的页面现场试试 →"
+ },
+ "obNote": {
+  "message": "一切都在你的设备上运行——无需账号、没有跟踪,数据不会离开你的电脑。受保护的视频流(YouTube、Netflix)无法保存;这是浏览器层面的统一规则,并非功能缺失。"
+ }
+}

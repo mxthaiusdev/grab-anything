@@ -1,0 +1,185 @@
+{
+ "appName": {
+  "message": "Grab Anything"
+ },
+ "appDesc": {
+  "message": "우클릭하거나 가리켜 클릭해서 무엇이든 다운로드 — 원본 화질 이미지, 로고, 폰트, 동영상, 디자인까지 통째로."
+ },
+ "cmdPicker": {
+  "message": "가져올 항목 선택 (요소 선택기)"
+ },
+ "menuPicker": {
+  "message": "가져올 항목 선택…"
+ },
+ "menuImage": {
+  "message": "이미지 다운로드"
+ },
+ "menuVideo": {
+  "message": "동영상 다운로드"
+ },
+ "menuAudio": {
+  "message": "오디오 다운로드"
+ },
+ "menuLink": {
+  "message": "링크된 파일 다운로드"
+ },
+ "menuSelection": {
+  "message": "선택한 텍스트 저장"
+ },
+ "menuPage": {
+  "message": "전체 페이지 저장"
+ },
+ "menuShotPage": {
+  "message": "전체 페이지 스크린샷"
+ },
+ "popupPick": {
+  "message": "요소 선택"
+ },
+ "popupShot": {
+  "message": "페이지 스크린샷"
+ },
+ "popupColors": {
+  "message": "색상"
+ },
+ "popupFonts": {
+  "message": "폰트"
+ },
+ "popupReview": {
+  "message": "Grab Anything, 마음에 드세요?"
+ },
+ "popupReviewLink": {
+  "message": "리뷰 남기기 ★"
+ },
+ "popupEmptyTitle": {
+  "message": "아직 이 페이지에서 캡처된 항목이 없어요."
+ },
+ "popupEmptyBody": {
+  "message": "페이지를 새로고침한 뒤 팝업을 다시 열어 주세요."
+ },
+ "groupImages": {
+  "message": "이미지"
+ },
+ "groupMedia": {
+  "message": "동영상 & 오디오"
+ },
+ "groupStreams": {
+  "message": "스트림 재생목록 (고급)"
+ },
+ "groupFonts": {
+  "message": "폰트"
+ },
+ "groupOther": {
+  "message": "기타 파일"
+ },
+ "zipSelected": {
+  "message": "선택 항목 ZIP"
+ },
+ "zipAll": {
+  "message": "모든 이미지 ZIP"
+ },
+ "downloadAll": {
+  "message": "전체"
+ },
+ "streamHint": {
+  "message": "재생목록은 스트리밍 동영상의 정보를 담은 파일이에요 — 사이트가 허용하는 범위에서 ffmpeg나 yt-dlp에 넣어 사용하세요."
+ },
+ "noAccess": {
+  "message": "이 페이지에서는 확장 프로그램을 사용할 수 없어요 (일반 웹사이트에서 시도해 보세요)."
+ },
+ "statusFetching": {
+  "message": "가져오는 중"
+ },
+ "statusZipping": {
+  "message": "압축하는 중"
+ },
+ "statusSaved": {
+  "message": "저장 완료"
+ },
+ "statusNothing": {
+  "message": "가져올 수 있는 항목이 없어요."
+ },
+ "optDownloads": {
+  "message": "다운로드"
+ },
+ "optExtras": {
+  "message": "우클릭 추가 항목"
+ },
+ "optSubfolder": {
+  "message": "Grab Anything 폴더에 저장"
+ },
+ "optSubfolderSmall": {
+  "message": "다운로드 폴더가 어질러지지 않게 따로 모아 줘요 (URL 다운로드에 적용)"
+ },
+ "optConvert": {
+  "message": "WebP/AVIF 이미지 저장 형식"
+ },
+ "optConvertSmall": {
+  "message": "사진 앱에서 잘 열리지 않는 형식을 변환해 줘요"
+ },
+ "optConvertPng": {
+  "message": "PNG"
+ },
+ "optConvertJpg": {
+  "message": "JPG"
+ },
+ "optConvertOff": {
+  "message": "원본 형식 유지"
+ },
+ "optToasts": {
+  "message": "페이지 내 알림 표시"
+ },
+ "optToastsSmall": {
+  "message": "다운로드가 실패하면 조용히 넘어가지 않고 이유를 알려 줘요"
+ },
+ "optSniffer": {
+  "message": "툴바 팝업용 페이지 미디어 수집"
+ },
+ "optSnifferSmall": {
+  "message": "이 페이지의 네트워크 요청을 지켜보고, 불러온 이미지·폰트·동영상을 팝업에 모두 보여 줘요. 어떤 데이터도 기기 밖으로 나가지 않아요."
+ },
+ "optSvg": {
+  "message": "로고 & 그래픽 (SVG)"
+ },
+ "optBg": {
+  "message": "배경 이미지"
+ },
+ "optFonts": {
+  "message": "페이지에 사용된 폰트"
+ },
+ "optCanvas": {
+  "message": "그림(캔버스)을 이미지로"
+ },
+ "optComponents": {
+  "message": "\"디자인 저장\" 메뉴 항목"
+ },
+ "optComponentsSmall": {
+  "message": "커서 아래의 메뉴 바·히어로·섹션을 열어서 살펴볼 수 있는 실제 웹 페이지 파일로 저장해요"
+ },
+ "obTagline": {
+  "message": "눈에 보이면, 저장할 수 있어요."
+ },
+ "obStep1H": {
+  "message": "무엇이든 우클릭"
+ },
+ "obStep1P": {
+  "message": "이미지는 축소된 썸네일이 아니라 <b>사이트가 가진 최고 화질</b>로 다운로드돼요. 텍스트에서는 사용된 폰트를 받을 수 있고, 로고는 선명한 SVG 파일로 저장돼요. 메뉴, 히어로, 푸터는 실제로 동작하는 디자인 파일로 저장돼요."
+ },
+ "obStep2H": {
+  "message": "선택기로 가리켜서 저장"
+ },
+ "obStep2P": {
+  "message": "<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>를 누르세요 (또는 우클릭 → <i>가져올 항목 선택</i>). 마우스를 움직여 원하는 것을 강조하고, 스크롤로 선택 범위를 넓힌 뒤, 클릭하면 이미지나 디자인 파일로 저장돼요."
+ },
+ "obStep3H": {
+  "message": "페이지가 불러온 모든 것 보기"
+ },
+ "obStep3P": {
+  "message": "툴바 아이콘을 고정하고 아무 페이지에서나 클릭해 보세요. 페이지가 불러온 모든 이미지·동영상·폰트가 보여요 — 하나씩 받거나, ZIP 하나로 전부 받을 수 있어요. 색상 팔레트와 폰트 카드도 클릭 한 번이면 돼요."
+ },
+ "obCta": {
+  "message": "사진 많은 페이지에서 바로 써 보기 →"
+ },
+ "obNote": {
+  "message": "모든 기능은 내 기기에서만 동작해요 — 계정도, 추적도 없고, 어떤 데이터도 밖으로 나가지 않아요. 보호된 동영상 스트림(YouTube, Netflix)은 저장할 수 없는데, 이건 빠진 기능이 아니라 브라우저 전체에 적용되는 규칙이에요."
+ }
+}

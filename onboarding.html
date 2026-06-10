@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Welcome to Grab Anything</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; font: 16px/1.6 -apple-system, system-ui, sans-serif; }
+  .hero { background: linear-gradient(135deg, #6366F1, #06B6D4); color: #fff; padding: 56px 24px 48px; text-align: center; }
+  .hero img { width: 72px; height: 72px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .hero h1 { margin: 18px 0 6px; font-size: 30px; letter-spacing: -.5px; }
+  .hero p { margin: 0; opacity: .9; }
+  main { max-width: 660px; margin: 0 auto; padding: 32px 24px 64px; }
+  .step { display: flex; gap: 16px; margin: 26px 0; align-items: flex-start; }
+  .n { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: #6366F1; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .step h2 { margin: 2px 0 6px; font-size: 18px; }
+  .step p { margin: 0; opacity: .8; }
+  kbd { background: rgba(127,127,127,.18); border-radius: 4px; padding: 1px 7px; font: 13px ui-monospace, monospace; }
+  .cta { display: inline-block; margin-top: 26px; background: #6366F1; color: #fff; text-decoration: none; padding: 12px 22px; border-radius: 10px; font-weight: 600; }
+  .note { margin-top: 34px; padding: 14px 16px; border-radius: 10px; background: rgba(127,127,127,.1); font-size: 14px; opacity: .85; }
+</style>
+</head>
+<body>
+<div class="hero">
+  <img src="icons/icon-128.png" alt="">
+  <h1>Grab Anything</h1>
+  <p data-i18n="obTagline">If you can see it, you can save it.</p>
+</div>
+<main>
+  <div class="step"><div class="n">1</div><div>
+    <h2 data-i18n="obStep1H">Right-click anything</h2>
+    <p data-i18n-html="obStep1P">Images download at the <b>best quality the site has</b> — not the shrunken thumbnail. Text offers the font used. Logos save as crisp SVG files. Menus, heroes and footers save as working design files.</p>
+  </div></div>
+  <div class="step"><div class="n">2</div><div>
+    <h2 data-i18n="obStep2H">Point and grab with the picker</h2>
+    <p data-i18n-html="obStep2P">Press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> (or right-click → <i>Pick what to grab</i>). Move your mouse to highlight anything, scroll to widen the selection, click to save it as an image or a design file.</p>
+  </div></div>
+  <div class="step"><div class="n">3</div><div>
+    <h2 data-i18n="obStep3H">See everything a page loaded</h2>
+    <p data-i18n-html="obStep3P">Pin the toolbar icon, then click it on any page: every image, video, and font the page fetched — download one, or all of them as a single ZIP. Plus one-click color palette and font cards.</p>
+  </div></div>
+
+  <a class="cta" href="https://en.wikipedia.org/wiki/Aurora" target="_blank" data-i18n="obCta">Try it live on a photo-heavy page →</a>
+
+  <div class="note" data-i18n-html="obNote">
+    Everything runs on your device — no accounts, no tracking, nothing leaves your machine.
+    Protected video streams (YouTube, Netflix) can't be saved; that's a browser-wide rule, not a missing feature.
+  </div>
+</main>
+<script src="i18n.js"></script>
+</body>
+</html>

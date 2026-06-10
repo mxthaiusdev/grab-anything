@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 13px/1.6 -apple-system, system-ui, sans-serif; margin: 16px; min-width: 340px; }
+  h1 { font-size: 14px; margin: 0 0 4px; }
+  fieldset { border: none; margin: 14px 0 0; padding: 0; }
+  legend { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; opacity: .6; padding: 0; }
+  label { display: flex; gap: 9px; align-items: flex-start; margin: 10px 0; cursor: pointer; }
+  input { margin-top: 2px; }
+  small { opacity: .6; display: block; }
+</style>
+</head>
+<body>
+<h1>Grab Anything</h1>
+
+<fieldset>
+  <legend data-i18n="optDownloads">Downloads</legend>
+  <label><span><span data-i18n="optConvert">Save WebP/AVIF images as</span>&nbsp;
+    <select id="convertImages">
+      <option value="png" data-i18n="optConvertPng">PNG</option>
+      <option value="jpg" data-i18n="optConvertJpg">JPG</option>
+      <option value="off" data-i18n="optConvertOff">Keep original format</option>
+    </select>
+    <small data-i18n="optConvertSmall">Converts the formats that photo apps often refuse to open</small></span></label>
+  <label><input type="checkbox" id="subfolder">
+    <span><span data-i18n="optSubfolder">Save into a Grab Anything folder</span>
+      <small data-i18n="optSubfolderSmall">Keeps grabs out of your Downloads root (applies to URL downloads)</small></span></label>
+  <label><input type="checkbox" id="toasts">
+    <span><span data-i18n="optToasts">Show on-page toasts</span>
+      <small data-i18n="optToastsSmall">Explains why a download failed instead of failing silently</small></span></label>
+  <label><input type="checkbox" id="sniffer">
+    <span><span data-i18n="optSniffer">Capture page media for the toolbar popup</span>
+      <small data-i18n="optSnifferSmall">Watches this page's network requests so the popup can list every image, font and video it loaded. Nothing leaves your machine.</small></span></label>
+</fieldset>
+
+<fieldset>
+  <legend data-i18n="optExtras">Right-click extras</legend>
+  <label><input type="checkbox" id="detectSvg"><span data-i18n="optSvg">Logos &amp; graphics (SVG)</span></label>
+  <label><input type="checkbox" id="detectBackgrounds"><span data-i18n="optBg">Background images</span></label>
+  <label><input type="checkbox" id="detectFonts"><span data-i18n="optFonts">Fonts used on the page</span></label>
+  <label><input type="checkbox" id="detectCanvas"><span data-i18n="optCanvas">Drawings (canvas) as images</span></label>
+  <label><input type="checkbox" id="detectComponents">
+    <span><span data-i18n="optComponents">"Save design" entries</span>
+      <small data-i18n="optComponentsSmall">Save the menu bar / hero / section under the cursor as a working web page file you can open and study</small></span></label>
+</fieldset>
+
+<script src="i18n.js"></script>
+<script src="options.js"></script>
+</body>
+</html>

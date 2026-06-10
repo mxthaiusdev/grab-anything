@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: light dark; }
+  body { width: 460px; max-height: 580px; margin: 0; overflow-y: auto;
+         font: 13px/1.45 -apple-system, system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+           position: sticky; top: 0; background: Canvas; z-index: 2;
+           border-bottom: 1px solid color-mix(in srgb, CanvasText 12%, transparent); }
+  header img { width: 20px; height: 20px; }
+  header .host { opacity: .6; font-size: 12px; overflow: hidden;
+                 text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .toolbar { display: flex; gap: 6px; padding: 10px 12px 4px; flex-wrap: wrap; }
+  .toolbar button { flex: 1; min-width: 100px; }
+  #banner { display: none; margin: 8px 12px 0; padding: 8px 12px; border-radius: 8px;
+            background: color-mix(in srgb, #6366F1 14%, Canvas);
+            font-size: 12px; align-items: center; gap: 8px; }
+  #banner a { color: inherit; font-weight: 600; }
+  #banner .x { margin-left: auto; cursor: pointer; opacity: .6; }
+  .group h2 { display: flex; align-items: center; justify-content: space-between;
+              margin: 0; padding: 12px 12px 6px; font-size: 11px;
+              text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 12px; }
+  .thumb { position: relative; border-radius: 8px; overflow: hidden; cursor: pointer;
+           aspect-ratio: 1; background: color-mix(in srgb, CanvasText 6%, transparent);
+           border: 2px solid transparent; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb.sel { border-color: #6366F1; }
+  .thumb .tick { position: absolute; top: 4px; left: 4px; width: 18px; height: 18px;
+                 border-radius: 50%; background: #6366F1; color: #fff; display: none;
+                 align-items: center; justify-content: center; font-size: 12px; }
+  .thumb.sel .tick { display: flex; }
+  .thumb .dl { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,.65);
+               color: #fff; border: none; border-radius: 6px; padding: 2px 7px;
+               cursor: pointer; font-size: 12px; }
+  .zipbar { display: flex; gap: 6px; padding: 8px 12px; }
+  .zipbar button { flex: 1; }
+  .row { display: flex; align-items: center; gap: 8px; padding: 5px 12px; cursor: pointer; }
+  .row:hover { background: color-mix(in srgb, CanvasText 8%, transparent); }
+  .row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .size { opacity: .55; font-size: 11px; flex-shrink: 0; }
+  button { cursor: pointer; color: inherit; background: transparent; border-radius: 7px;
+           border: 1px solid color-mix(in srgb, CanvasText 20%, transparent);
+           padding: 5px 10px; font-size: 12px; }
+  button:hover { background: color-mix(in srgb, CanvasText 10%, transparent); }
+  button.primary { background: #6366F1; color: #fff; border-color: #6366F1; }
+  .empty { padding: 26px 18px; text-align: center; opacity: .6; }
+  .hint { padding: 4px 12px 10px; font-size: 11px; opacity: .55; }
+  #status { padding: 4px 12px 10px; font-size: 12px; opacity: .7; }
+</style>
+</head>
+<body>
+<header>
+  <img src="icons/icon-32.png" alt="">
+  <strong>Grab Anything</strong>
+  <span class="host" id="host"></span>
+</header>
+<div class="toolbar">
+  <button id="btnPick" class="primary">🎯 <span data-i18n="popupPick">Pick element</span></button>
+  <button id="btnShot">📸 <span data-i18n="popupShot">Screenshot page</span></button>
+  <button id="btnPalette">🎨 <span data-i18n="popupColors">Colors</span></button>
+  <button id="btnFonts">🔤 <span data-i18n="popupFonts">Fonts</span></button>
+</div>
+<div id="banner">
+  <span><span data-i18n="popupReview">Enjoying Grab Anything?</span> <a id="rateLink" href="#" target="_blank" data-i18n="popupReviewLink">Leave a review ★</a></span>
+  <span class="x" id="bannerX">✕</span>
+</div>
+<div id="status"></div>
+<div id="list"></div>
+<script src="i18n.js"></script>
+<script src="zip.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

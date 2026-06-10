@@ -1,0 +1,185 @@
+{
+ "appName": {
+  "message": "Grab Anything"
+ },
+ "appDesc": {
+  "message": "Rechtsklick oder zeigen & klicken: Lade alles herunter – Bilder in voller Qualität, Logos, Schriften, Videos, ganze Designs."
+ },
+ "cmdPicker": {
+  "message": "Auswählen, was du dir schnappst (Element-Picker)"
+ },
+ "menuPicker": {
+  "message": "Auswählen, was du dir schnappst…"
+ },
+ "menuImage": {
+  "message": "Bild herunterladen"
+ },
+ "menuVideo": {
+  "message": "Video herunterladen"
+ },
+ "menuAudio": {
+  "message": "Audio herunterladen"
+ },
+ "menuLink": {
+  "message": "Verlinkte Datei herunterladen"
+ },
+ "menuSelection": {
+  "message": "Markierten Text speichern"
+ },
+ "menuPage": {
+  "message": "Ganze Seite speichern"
+ },
+ "menuShotPage": {
+  "message": "Screenshot der ganzen Seite"
+ },
+ "popupPick": {
+  "message": "Element auswählen"
+ },
+ "popupShot": {
+  "message": "Seiten-Screenshot"
+ },
+ "popupColors": {
+  "message": "Farben"
+ },
+ "popupFonts": {
+  "message": "Schriften"
+ },
+ "popupReview": {
+  "message": "Gefällt dir Grab Anything?"
+ },
+ "popupReviewLink": {
+  "message": "Bewertung schreiben ★"
+ },
+ "popupEmptyTitle": {
+  "message": "Auf dieser Seite wurde noch nichts erfasst."
+ },
+ "popupEmptyBody": {
+  "message": "Lade die Seite neu und öffne dieses Popup dann erneut."
+ },
+ "groupImages": {
+  "message": "Bilder"
+ },
+ "groupMedia": {
+  "message": "Video & Audio"
+ },
+ "groupStreams": {
+  "message": "Stream-Playlists (für Profis)"
+ },
+ "groupFonts": {
+  "message": "Schriften"
+ },
+ "groupOther": {
+  "message": "Sonstige Dateien"
+ },
+ "zipSelected": {
+  "message": "Auswahl als ZIP"
+ },
+ "zipAll": {
+  "message": "Alle Bilder als ZIP"
+ },
+ "downloadAll": {
+  "message": "alle"
+ },
+ "streamHint": {
+  "message": "Playlists beschreiben gestreamte Videos – füttere ffmpeg oder yt-dlp damit, wo die Website es erlaubt."
+ },
+ "noAccess": {
+  "message": "Diese Seite erlaubt keine Erweiterungen (probier eine normale Website)."
+ },
+ "statusFetching": {
+  "message": "Wird geladen"
+ },
+ "statusZipping": {
+  "message": "Wird gezippt"
+ },
+ "statusSaved": {
+  "message": "Gespeichert"
+ },
+ "statusNothing": {
+  "message": "Es konnte nichts geladen werden."
+ },
+ "optDownloads": {
+  "message": "Downloads"
+ },
+ "optExtras": {
+  "message": "Rechtsklick-Extras"
+ },
+ "optSubfolder": {
+  "message": "In einen Grab Anything-Ordner speichern"
+ },
+ "optSubfolderSmall": {
+  "message": "So bleibt dein Downloads-Ordner aufgeräumt (gilt für URL-Downloads)"
+ },
+ "optConvert": {
+  "message": "WebP/AVIF-Bilder speichern als"
+ },
+ "optConvertSmall": {
+  "message": "Wandelt die Formate um, die Foto-Apps oft nicht öffnen wollen"
+ },
+ "optConvertPng": {
+  "message": "PNG"
+ },
+ "optConvertJpg": {
+  "message": "JPG"
+ },
+ "optConvertOff": {
+  "message": "Originalformat behalten"
+ },
+ "optToasts": {
+  "message": "Hinweise direkt auf der Seite anzeigen"
+ },
+ "optToastsSmall": {
+  "message": "Erklärt, warum ein Download fehlgeschlagen ist, statt still zu scheitern"
+ },
+ "optSniffer": {
+  "message": "Seitenmedien für das Toolbar-Popup erfassen"
+ },
+ "optSnifferSmall": {
+  "message": "Beobachtet die Netzwerkanfragen dieser Seite, damit das Popup jedes geladene Bild, jede Schrift und jedes Video auflisten kann. Nichts verlässt deinen Rechner."
+ },
+ "optSvg": {
+  "message": "Logos & Grafiken (SVG)"
+ },
+ "optBg": {
+  "message": "Hintergrundbilder"
+ },
+ "optFonts": {
+  "message": "Auf der Seite verwendete Schriften"
+ },
+ "optCanvas": {
+  "message": "Zeichnungen (Canvas) als Bilder"
+ },
+ "optComponents": {
+  "message": "„Design speichern“-Einträge"
+ },
+ "optComponentsSmall": {
+  "message": "Speichert die Menüleiste / den Hero / den Abschnitt unter dem Cursor als funktionierende Webseiten-Datei, die du öffnen und studieren kannst"
+ },
+ "obTagline": {
+  "message": "Was du sehen kannst, kannst du speichern."
+ },
+ "obStep1H": {
+  "message": "Rechtsklick auf alles"
+ },
+ "obStep1P": {
+  "message": "Bilder werden in der <b>besten Qualität, die die Seite hat</b>, heruntergeladen – nicht als geschrumpftes Thumbnail. Bei Text bekommst du die verwendete Schrift. Logos landen als gestochen scharfe SVG-Dateien. Menüs, Hero-Bereiche und Footer werden als funktionierende Design-Dateien gespeichert."
+ },
+ "obStep2H": {
+  "message": "Zeigen und schnappen mit dem Picker"
+ },
+ "obStep2P": {
+  "message": "Drücke <kbd>Alt</kbd>+<kbd>Umschalt</kbd>+<kbd>G</kbd> (oder Rechtsklick → <i>Auswählen, was du dir schnappst</i>). Beweg die Maus, um etwas zu markieren, scrolle, um die Auswahl zu vergrößern, und klicke, um es als Bild oder Design-Datei zu speichern."
+ },
+ "obStep3H": {
+  "message": "Sieh alles, was eine Seite geladen hat"
+ },
+ "obStep3P": {
+  "message": "Pinne das Icon an die Toolbar und klicke es auf einer beliebigen Seite: alle Bilder, Videos und Schriften, die die Seite geladen hat – einzeln herunterladen oder alle zusammen als ein ZIP. Dazu Farbpalette und Schriftkarten mit einem Klick."
+ },
+ "obCta": {
+  "message": "Probier es live auf einer fotolastigen Seite aus →"
+ },
+ "obNote": {
+  "message": "Alles läuft auf deinem Gerät – keine Konten, kein Tracking, nichts verlässt deinen Rechner. Geschützte Videostreams (YouTube, Netflix) lassen sich nicht speichern; das ist eine browserweite Regel, kein fehlendes Feature."
+ }
+}
