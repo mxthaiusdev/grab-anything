@@ -11,7 +11,8 @@ rm -f "$OUT"
 zip -r "$OUT" \
   manifest.json background.js content.js \
   popup.html popup.js options.html options.js \
-  icons \
+  onboarding.html i18n.js zip.js \
+  icons _locales \
   -x '.*' '*/.*'
 
 echo ""

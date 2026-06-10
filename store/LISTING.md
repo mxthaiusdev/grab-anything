@@ -1,81 +1,86 @@
-# Chrome Web Store listing — Grab Anything
+# Chrome Web Store listing — Grab Anything (v0.7.0)
 
-## Name
-Grab Anything — right-click downloader
+## Name (from manifest)
+Grab Anything
 
-## Short description (max 132 chars)
-Right-click → download anything: images, SVG logos, webfonts, backgrounds, video — plus a popup listing every file a page loads.
+## Short description (110/132 chars — from manifest, shown under the name)
+Right-click or point-and-pick to download anything: images at full quality, logos, fonts, video, whole designs.
 
 ## Category
 Tools
 
-## Detailed description
+## Language
+English (default) — localized listings for 10 more languages in `store/locales/`
+(es, fr, de, pt_BR, it, ja, ko, ru, zh_CN, hi). Paste each into the dashboard's
+per-language listing fields; the extension UI localizes automatically.
 
-Save the things browsers make annoying to save — in one right-click.
+## Detailed description (English)
+
+Save anything you can see — in one right-click or one point-and-click.
 
 WHAT IT GRABS
-• Images — including srcset, lazy-loaded and CDN URLs without file extensions
-• FULL RESOLUTION: thumbnails are auto-upgraded to the CDN original where
-  possible (YouTube avatars and video thumbnails, Twitter, Wikipedia,
-  WordPress/Shopify size suffixes) — verified before download
-• Inline SVG logos — exported as standalone .svg files (most site logos!)
-• CSS background images — even on pseudo-elements and image-set()
-• Webfonts — right-click any text and download the actual font file (woff2), Google Fonts included
-• Video & audio with real sources, alternate encodings, posters and subtitle tracks
-• Canvas drawings as PNG
-• Linked files, selections as .txt, whole pages as HTML
+• Images at the BEST QUALITY the site has — thumbnails are auto-upgraded to
+  the CDN original (YouTube avatars, video thumbnails, Twitter, Wikipedia,
+  WordPress and more), verified before download
+• WebP/AVIF saved as PNG or JPG automatically — no more files your photo
+  apps refuse to open
+• Logos as crisp SVG files, the fonts a page uses, video & audio files,
+  subtitles, backgrounds — even ones hidden behind overlays
+• Whole designs: save a navigation bar, hero or footer as a working
+  HTML+CSS file you can open and study — or export every section of a page
+  in one click
 
-COMPONENT EXTRACTION
-Right-click a navbar, card or footer → "Save design" exports it
-as a standalone file: markup plus every matching CSS rule, hover states,
-media queries, fonts, keyframes and CSS variables included. Open it and the
-component renders exactly as it did on the page — perfect for studying how
-a design was built.
+THE ELEMENT PICKER
+Press Alt+Shift+G and point at anything: it highlights with a plain-English
+label, scroll widens the selection, click saves it as a pixel-perfect image
+or a design file. Copy SVG pastes straight into Figma.
 
-THE POPUP
-The toolbar popup lists every image, font, video and stream manifest the
-current page loaded over the network — including files added by JavaScript
-that never appear in the DOM. Download one, or all of them at once.
+THE GALLERY POPUP
+The toolbar popup shows every image, video and font the page loaded — even
+files JavaScript fetched behind the scenes — as a thumbnail grid. Download
+one, a selection, or everything as a single ZIP. Plus one-click color
+palette and font specimen cards for any site.
 
-ROBUST DOWNLOADS
-If a CDN blocks the direct download (hotlink protection), Grab Anything
-automatically retries through the page itself and then through the
-extension's own fetch. If nothing works you get an on-page explanation, not
-silence.
-
-HONEST LIMITS
-DRM/MSE streams (YouTube, Netflix, Spotify) cannot be downloaded — there is
-no file to grab, and we don't try to circumvent protection.
-
-PRIVACY
-Everything runs locally. No analytics, no tracking, no data ever leaves
-your machine. See the privacy policy.
+PRIVACY FIRST
+Everything runs locally on your device. No accounts, no analytics, no
+tracking — nothing ever leaves your machine. Protected video streams
+(YouTube, Netflix) can't be saved: that's a browser-wide rule we don't
+circumvent, by design and by policy.
 
 ## Single-purpose statement
-The extension's single purpose is letting the user download media assets
-(images, fonts, SVG, audio/video, documents) from the page they are viewing.
+The extension's single purpose is letting the user save assets (images,
+fonts, graphics, audio/video, page designs) from the web page they are
+viewing.
 
-## Permission justifications
-- contextMenus — the core UI: "Download …" entries in the right-click menu.
-- downloads — saving the chosen file to the user's Downloads folder.
-- storage — user settings (sync) and the per-tab media list (session).
-- scripting — injecting the detector into tabs already open at install time,
-  so the extension works without a browser restart.
-- webRequest (observational only) — building the popup's list of media files
-  the current tab loaded. No requests are modified or blocked.
-- host_permissions <all_urls> — the user can right-click on any site; asset
-  detection and download fallbacks must work wherever they browse. No data
-  is collected or transmitted.
+## Permission justifications (paste into the Privacy tab)
+- contextMenus — the core UI: "Download …" / "Save design …" entries in the
+  right-click menu.
+- downloads — saving the user's chosen files to their Downloads folder.
+- storage — user settings (sync) and the per-tab media list (session,
+  auto-deleted on navigation). A local counter for the review prompt.
+- scripting — injecting the detector into tabs already open at install
+  time, so the extension works without a browser restart.
+- webRequest (observational only) — building the popup's list of media the
+  current tab loaded. No requests are modified, redirected, or blocked.
+- clipboardWrite — the picker's "Copy image" / "Copy SVG" actions.
+- activeTab implication via commands — the Alt+Shift+G shortcut starts the
+  on-page element picker.
+- host_permissions <all_urls> — the user can right-click on any site they
+  visit; asset detection, screenshot capture and download fallbacks must
+  work wherever they browse. No data is collected or transmitted anywhere.
 
-## Assets in this folder
+## Data collection disclosure (Privacy tab questionnaire)
+- Does NOT collect or use any user data. Tick "No" / "None" for every
+  category (personally identifiable info, health, financial, location, web
+  history, user activity, website content). Nothing is transmitted.
+
+## Assets (this folder)
 - promo-440x280.png — small promo tile
-- screenshot-1280x800.png — listing screenshot (explainer)
-Take 1-2 additional real screenshots (context menu open on a real site, the
-popup listing a busy page) before submitting.
+- screenshot-picker.png (1280x800) — REAL screenshot: picker in action
+- screenshot-gallery.png (1280x800) — REAL screenshot: gallery popup + ZIP
+- screenshot-1280x800.png — context-menu explainer
+- Use all three screenshots; picker first (it demos best).
 
-## Submission checklist
-1. `bash dev/build-zip.sh` → upload `dist/grab-anything-<version>.zip`
-2. Developer account ($5 one-time), verified email
-3. Privacy tab: link/paste PRIVACY.md, declare "no data collected"
-4. Justify each permission (copy from above)
-5. Expect an in-depth review (broad host permissions) — typically days, not hours
+## Privacy policy
+store/PRIVACY.md — paste as text, or publish the GitHub repo and link the
+raw file URL.
