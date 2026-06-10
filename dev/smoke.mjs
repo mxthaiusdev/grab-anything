@@ -425,6 +425,33 @@ await page.waitForTimeout(150);
 const escGone = await page.evaluate(() => !document.querySelector('[data-ga-picker]'));
 check('Esc cancels picker', escGone);
 
+/* ---- 22b. copy design with inlined CSS ---- */
+await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
+await sw.evaluate(
+  ({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-picker-start' }, { frameId: 0 }),
+  { tabId }
+);
+await page.waitForTimeout(250);
+const brandBox = await page.locator('#mainnav .brand').boundingBox();
+await page.mouse.move(brandBox.x + 5, brandBox.y + 5);
+await page.waitForTimeout(250);
+await page.mouse.click(brandBox.x + 5, brandBox.y + 5);
+await page.waitForTimeout(250);
+await page.click('[data-ga-bar] [data-ga-action="copy-design"]');
+await page.waitForTimeout(900);
+const clip = await page.evaluate(async () => {
+  const items = await navigator.clipboard.read();
+  const out = {};
+  for (const it of items) {
+    if (it.types.includes('text/html')) out.html = await (await it.getType('text/html')).text();
+    if (it.types.includes('text/plain')) out.plain = await (await it.getType('text/plain')).text();
+  }
+  return out;
+});
+check('copy design: html flavor has inlined styles', clip.html && clip.html.includes('style="') && clip.html.includes('Brand'), (clip.html || 'EMPTY').slice(0, 120));
+check('copy design: inherits the real background color', clip.html && clip.html.includes('background-color: rgb(17, 34, 51)'), (clip.html || '').slice(0, 200));
+check('copy design: plain flavor is standalone code', clip.plain && clip.plain.startsWith('<!DOCTYPE') && clip.plain.includes(':hover'), (clip.plain || 'EMPTY').slice(0, 80));
+
 /* ---- 23. webp auto-conversion to png ---- */
 const webpB64 = await page.evaluate(() => {
   const c = document.createElement('canvas');

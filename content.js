@@ -663,7 +663,11 @@
   }
 
   function cloneComponentHtml(rootEl) {
-    const clone = rootEl.cloneNode(true);
+    return finishClone(rootEl.cloneNode(true));
+  }
+
+  // strip scripts/handlers, absolutize URLs, copy in SVG sprite refs
+  function finishClone(clone) {
     clone.querySelectorAll('script, noscript').forEach((s) => s.remove());
 
     const fixUrl = (el, attr) => {
@@ -876,6 +880,7 @@
 
     bar.append(mkBtn('Save as image', 'shot', () => pickerShot(el)));
     bar.append(mkBtn('Save design', 'design', () => exportComponent(el, componentName(el) + '.html')));
+    bar.append(mkBtn('Copy design', 'copy-design', () => copyDesign(el)));
     const img = el.tagName === 'IMG' ? el : el.querySelector && el.querySelector('img');
     if (el.tagName === 'IMG') {
       bar.append(mkBtn('Download image', 'download-img', () => {
@@ -899,6 +904,113 @@
     bar.style.top = top + 'px';
     bar.style.left = Math.max(8, Math.min(r.left, innerWidth - bar.offsetWidth - 8)) + 'px';
     picker.bar = bar;
+  }
+
+  /* ---- copy design: component with computed styles inlined ----
+     Rich-text paste targets (Docs, Gmail, Notion, editors' preview panes)
+     strip <style> blocks, so the text/html flavor inlines every element's
+     computed style (diffed against per-tag defaults to stay compact). The
+     text/plain flavor carries the full standalone document — hover states,
+     media queries and all — for pasting into a code editor. */
+
+  const STYLE_PROPS = [
+    'display', 'position', 'top', 'right', 'bottom', 'left', 'float', 'clear',
+    'flex-direction', 'flex-wrap', 'flex-grow', 'flex-shrink', 'flex-basis', 'order',
+    'justify-content', 'align-items', 'align-content', 'align-self', 'row-gap', 'column-gap',
+    'grid-template-columns', 'grid-template-rows', 'grid-auto-flow', 'grid-column', 'grid-row',
+    'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height', 'box-sizing',
+    'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+    'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+    'border-top-width', 'border-top-style', 'border-top-color',
+    'border-right-width', 'border-right-style', 'border-right-color',
+    'border-bottom-width', 'border-bottom-style', 'border-bottom-color',
+    'border-left-width', 'border-left-style', 'border-left-color',
+    'border-top-left-radius', 'border-top-right-radius',
+    'border-bottom-left-radius', 'border-bottom-right-radius',
+    'background-color', 'background-image', 'background-size', 'background-position', 'background-repeat',
+    'color', 'font-family', 'font-size', 'font-weight', 'font-style',
+    'line-height', 'letter-spacing', 'text-align', 'text-decoration-line',
+    'text-transform', 'white-space', 'word-break',
+    'overflow-x', 'overflow-y', 'box-shadow', 'opacity', 'transform', 'z-index',
+    'cursor', 'list-style-type', 'vertical-align', 'object-fit', 'visibility',
+    'filter', 'fill', 'stroke', 'stroke-width',
+  ];
+
+  let baselineSandbox = null;
+  const baselineCache = new Map();
+
+  function baselineFor(tag) {
+    if (baselineCache.has(tag)) return baselineCache.get(tag);
+    if (!baselineSandbox || !baselineSandbox.isConnected) {
+      baselineSandbox = document.createElement('div');
+      baselineSandbox.style.cssText = 'position:absolute;left:-99999px;top:-99999px;width:0;height:0;overflow:hidden;';
+      document.documentElement.appendChild(baselineSandbox);
+    }
+    let probe;
+    try { probe = document.createElement(tag); } catch (_) { probe = document.createElement('div'); }
+    baselineSandbox.appendChild(probe);
+    const cs = getComputedStyle(probe);
+    const snap = {};
+    for (const p of STYLE_PROPS) snap[p] = cs.getPropertyValue(p);
+    probe.remove();
+    baselineCache.set(tag, snap);
+    return snap;
+  }
+
+  function buildInlineHtml(rootEl) {
+    if (rootEl.querySelectorAll('*').length > 1500) {
+      throw new Error('this area is too big to copy — pick something more specific');
+    }
+    const clone = rootEl.cloneNode(true);
+    const origEls = [rootEl, ...rootEl.querySelectorAll('*')];
+    const cloneEls = [clone, ...clone.querySelectorAll('*')];
+
+    for (let i = 0; i < origEls.length; i++) {
+      const o = origEls[i];
+      const c = cloneEls[i];
+      const tag = o.tagName.toLowerCase();
+      if (tag === 'script' || tag === 'noscript' || tag === 'style') continue;
+      const cs = getComputedStyle(o);
+      const base = baselineFor(tag);
+      const decls = [];
+      for (const p of STYLE_PROPS) {
+        const v = cs.getPropertyValue(p);
+        if (v && v !== base[p]) decls.push(p + ': ' + v);
+      }
+      if (i === 0) {
+        // root: pin it down so it sits naturally where it's pasted
+        const pos = cs.getPropertyValue('position');
+        if (pos === 'fixed' || pos === 'sticky' || pos === 'absolute') {
+          for (let d = decls.length - 1; d >= 0; d--) {
+            if (/^(position|top|right|bottom|left|z-index)(:|$)/.test(decls[d])) decls.splice(d, 1);
+          }
+          decls.push('position: static');
+        }
+        // transparent component over a dark page would vanish on white
+        if (/^rgba\(0, 0, 0, 0\)|^transparent/.test(cs.backgroundColor)) {
+          let bg = null;
+          for (let a = o.parentElement; a && a !== document.documentElement; a = a.parentElement) {
+            const ab = getComputedStyle(a).backgroundColor;
+            if (ab && !/^rgba\(0, 0, 0, 0\)|^transparent/.test(ab)) { bg = ab; break; }
+          }
+          if (bg) decls.push('background-color: ' + bg);
+        }
+      }
+      if (decls.length) c.setAttribute('style', decls.join('; '));
+    }
+
+    if (baselineSandbox) { baselineSandbox.remove(); baselineSandbox = null; }
+    return finishClone(clone);
+  }
+
+  async function copyDesign(el) {
+    const html = buildInlineHtml(el);
+    const plain = await buildComponentHtml(el);
+    await navigator.clipboard.write([new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([plain], { type: 'text/plain' }),
+    })]);
+    toast('Design copied — paste into docs or email for the visual, into an editor for the code.');
   }
 
   async function copyImageToClipboard(imgEl) {
