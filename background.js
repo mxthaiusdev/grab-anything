@@ -125,10 +125,13 @@ async function injectIntoOpenTabs() {
 const menuTitle = (s) => String(s).replace(/&/g, '&&');
 
 async function getSniffEntries(tabId) {
+  // merge what survived a worker restart (session) with what the current
+  // worker has seen (live) — either alone can be a truncated view
+  const stored = (await chrome.storage.session.get('sniff' + tabId))['sniff' + tabId] || [];
+  const merged = new Map(stored.map((e) => [e.url, e]));
   const live = sniffed.get(tabId);
-  if (live && live.size) return [...live.values()];
-  const stored = await chrome.storage.session.get('sniff' + tabId);
-  if ((stored['sniff' + tabId] || []).length) return stored['sniff' + tabId];
+  if (live) for (const [url, e] of live) merged.set(url, e);
+  if (merged.size) return [...merged.values()];
   // worker may have been asleep during page load — ask the page itself
   try {
     const res = await chrome.tabs.sendMessage(tabId, { type: 'ga-inventory' }, { frameId: 0 });
@@ -144,12 +147,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
-  // from the popup (no sender.tab): centralised downloads with upgrades
+  // centralised downloads with upgrades (popup passes msg.tabId; the
+  // picker's content script has sender.tab — keep it so the referer
+  // fallback chain and failure toasts work)
   if (msg.type === 'ga-download') {
+    const dlTab = sender.tab ? sender.tab.id : (Number.isInteger(msg.tabId) ? msg.tabId : -1);
+    const dlFrame = sender.frameId || 0;
     if (msg.kind === 'image' && /^https?:/.test(msg.url)) {
-      downloadImageSmart(msg.url, -1, 0);
+      downloadImageSmart(msg.url, dlTab, dlFrame);
     } else {
-      startDownload({ url: msg.url, filename: msg.filename }, -1, 0);
+      startDownload({ url: msg.url, filename: msg.filename }, dlTab, dlFrame);
     }
     return;
   }
@@ -400,12 +407,14 @@ async function maybeConvertImage(url) {
     const res = await fetch(url);
     if (!res.ok) return null;
     const blob = await res.blob();
+    if (blob.size > 48 * 1024 * 1024) return null; // PNG re-encode can balloon — keep original
     const bmp = await createImageBitmap(blob);
     const canvas = new OffscreenCanvas(bmp.width, bmp.height);
     canvas.getContext('2d').drawImage(bmp, 0, 0);
     const out = await canvas.convertToBlob(
       mode === 'jpg' ? { type: 'image/jpeg', quality: 0.92 } : { type: 'image/png' }
     );
+    if (out.size > 96 * 1024 * 1024) return null;
     const b64 = toBase64(new Uint8Array(await out.arrayBuffer()));
     const base = (guessFilename(url) || 'image').replace(/\.(webp|avif)$/i, '');
     return { url: 'data:' + out.type + ';base64,' + b64, filename: base + (mode === 'jpg' ? '.jpg' : '.png') };
@@ -419,8 +428,14 @@ async function convertOrDownload(url, tabId, frameId) {
       url: conv.url,
       filename: withFolder(conv.filename),
       conflictAction: 'uniquify',
-    }, swallowError);
-    bumpGrabCount();
+    }, (downloadId) => {
+      if (chrome.runtime.lastError || downloadId === undefined) {
+        // converted data-URL refused — fall back to the raw file's chain
+        startDownload({ url, filename: guessFilename(url) }, tabId, frameId);
+        return;
+      }
+      bumpGrabCount();
+    });
     return;
   }
   startDownload({ url, filename: guessFilename(url) }, tabId, frameId);
@@ -545,7 +560,17 @@ function onRequestCompleted(details) {
   if (!kind) return;
 
   let tabMap = sniffed.get(details.tabId);
-  if (!tabMap) { tabMap = new Map(); sniffed.set(details.tabId, tabMap); }
+  if (!tabMap) {
+    tabMap = new Map();
+    sniffed.set(details.tabId, tabMap);
+    // rehydrate entries that survived a worker restart, so the debounced
+    // persist below doesn't overwrite the full list with a fresh sliver
+    chrome.storage.session.get('sniff' + details.tabId).then((o) => {
+      for (const e of o['sniff' + details.tabId] || []) {
+        if (!tabMap.has(e.url) && tabMap.size < SNIFF_CAP) tabMap.set(e.url, e);
+      }
+    }).catch(() => {});
+  }
   if (tabMap.size >= SNIFF_CAP && !tabMap.has(details.url)) return;
 
   const headers = details.responseHeaders || [];

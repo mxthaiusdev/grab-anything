@@ -47,11 +47,9 @@ That's the only mandatory cost in this entire process.
   reply using the justifications text, don't change code reflexively.
 
 ## 7. The moment it's published
-1. Copy the real listing URL (chromewebstore.google.com/detail/…)
-2. Put it in `popup.js` → `STORE_URL` (the review prompt links there)
-3. Bump version to 0.7.1, `bash dev/build-zip.sh`, upload the update
-4. Pin a 5-star review from your own account? No — never review your own
-   product; ask real friends who actually use it.
+- Nothing to redeploy: the review-prompt link is built from the extension's
+  runtime ID, so it points at your real listing automatically.
+- Never review your own product; ask real friends who actually use it.
 
 ## Free distribution multipliers (do the same week)
 - **Edge Add-ons** (free registration): https://partner.microsoft.com/dashboard/microsoftedge

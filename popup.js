@@ -1,8 +1,8 @@
 // Toolbar popup — power actions plus a gallery of everything the page
 // loaded (from the webRequest sniffer), with multi-select ZIP export.
 
-// TODO: replace with the real store listing URL after publishing
-const STORE_URL = 'https://chromewebstore.google.com/';
+// resolves to the real listing once published (runtime.id == store id)
+const STORE_URL = 'https://chromewebstore.google.com/detail/' + chrome.runtime.id;
 
 const t = (key, fallback) => {
   try { return chrome.i18n.getMessage(key) || fallback; } catch (_) { return fallback; }
@@ -21,6 +21,9 @@ const leaf = (url) => {
     return decodeURIComponent(u.pathname.split('/').pop() || '') || u.hostname;
   } catch (_) { return url.slice(0, 60); }
 };
+
+const safeName = (s) =>
+  (s || '').replace(/[\\/:*?"<>|\x00-\x1f]+/g, '_').replace(/^\.+/, '').slice(0, 150) || 'file';
 
 const fmtSize = (n) => {
   if (!n) return '';
@@ -84,7 +87,7 @@ const status = (t) => { document.getElementById('status').textContent = t; };
 
   const download = (url, name, kind) => {
     try {
-      const p = chrome.runtime.sendMessage({ type: 'ga-download', url, filename: name, kind });
+      const p = chrome.runtime.sendMessage({ type: 'ga-download', url, filename: name, kind, tabId: tab ? tab.id : -1 });
       if (p && p.catch) p.catch(() => {});
     } catch (_) {}
   };
@@ -99,7 +102,7 @@ const status = (t) => { document.getElementById('status').textContent = t; };
         const res = await fetch(it.url);
         if (!res.ok) continue;
         const buf = new Uint8Array(await res.arrayBuffer());
-        let name = (leaf(it.url) || 'file').slice(-80);
+        let name = safeName(leaf(it.url)).slice(-80);
         if (!/\./.test(name)) name += extFromType(res.headers.get('content-type')) || '.bin';
         let candidate = name;
         let i = 1;
@@ -112,9 +115,14 @@ const status = (t) => { document.getElementById('status').textContent = t; };
     status(t('statusZipping', 'Zipping') + ' ' + entriesZ.length + '…');
     const blob = GrabZip.buildZip(entriesZ);
     const url = URL.createObjectURL(blob);
-    chrome.downloads.download({ url, filename: zipName, conflictAction: 'uniquify' }, () => void chrome.runtime.lastError);
+    chrome.downloads.download({ url, filename: zipName, conflictAction: 'uniquify' }, (downloadId) => {
+      if (chrome.runtime.lastError || downloadId === undefined) {
+        status(t('statusNothing', 'Nothing could be fetched.'));
+        return;
+      }
+      status(t('statusSaved', 'Saved') + ': ' + zipName + ' (' + entriesZ.length + ')');
+    });
     setTimeout(() => URL.revokeObjectURL(url), 60000);
-    status(t('statusSaved', 'Saved') + ': ' + zipName + ' (' + entriesZ.length + ')');
   }
 
   /* ---- image gallery ---- */
@@ -137,14 +145,21 @@ const status = (t) => { document.getElementById('status').textContent = t; };
       const img = document.createElement('img');
       img.loading = 'lazy';
       img.src = e.url;
-      img.addEventListener('error', () => cell.remove());
+      img.addEventListener('error', () => {
+        cell.remove();
+        if (selected.has(e)) {
+          selected.delete(e);
+          zipSel.textContent = t('zipSelected', 'ZIP selected') + (selected.size ? ' (' + selected.size + ')' : '');
+          zipSel.disabled = !selected.size;
+        }
+      });
       const tick = document.createElement('span');
       tick.className = 'tick';
       tick.textContent = '✓';
       const dl = document.createElement('button');
       dl.className = 'dl';
       dl.textContent = '↓';
-      dl.addEventListener('click', (ev) => { ev.stopPropagation(); download(e.url, leaf(e.url), 'image'); });
+      dl.addEventListener('click', (ev) => { ev.stopPropagation(); download(e.url, safeName(leaf(e.url)), 'image'); });
       cell.append(img, tick, dl);
       cell.addEventListener('click', () => {
         if (selected.has(e)) { selected.delete(e); cell.classList.remove('sel'); }
@@ -183,7 +198,7 @@ const status = (t) => { document.getElementById('status').textContent = t; };
     const all = document.createElement('button');
     all.textContent = '↓ ' + t('downloadAll', 'all');
     all.addEventListener('click', () => {
-      items.forEach((e, i) => setTimeout(() => download(e.url, leaf(e.url), e.kind), i * 120));
+      items.forEach((e, i) => setTimeout(() => download(e.url, safeName(leaf(e.url)), e.kind), i * 120));
     });
     h.append(all);
     group.append(h);
@@ -201,7 +216,7 @@ const status = (t) => { document.getElementById('status').textContent = t; };
       const btn = document.createElement('button');
       btn.textContent = '↓';
       row.append(name, size, btn);
-      row.addEventListener('click', () => download(e.url, leaf(e.url), e.kind));
+      row.addEventListener('click', () => download(e.url, safeName(leaf(e.url)), e.kind));
       group.append(row);
     }
 
