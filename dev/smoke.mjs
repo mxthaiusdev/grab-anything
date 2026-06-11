@@ -527,6 +527,28 @@ if (recPresent) {
   check('canvas records to non-empty webm', webm && kb > 5, webm ? kb + 'KB' : 'no webm');
 }
 
+/* ---- 28. canvas records to an animated GIF ---- */
+await sw.evaluate(({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-picker-start' }, { frameId: 0 }), { tabId });
+await page.waitForTimeout(250);
+const cv3 = await page.locator('#cv').boundingBox();
+await page.mouse.move(cv3.x + 20, cv3.y + 20); await page.waitForTimeout(250);
+await page.mouse.click(cv3.x + 20, cv3.y + 20); await page.waitForTimeout(250);
+const gifPresent = await page.evaluate(() => !!document.querySelector('[data-ga-action="record-gif"]'));
+check('save-GIF button appears on canvas', gifPresent);
+if (gifPresent) {
+  await page.click('[data-ga-action="record-gif"]');
+  await page.waitForTimeout(2200);
+  await page.click('[data-ga-action="record-gif"]');
+  const gif = await waitFor(async () => downloadObjs.find((d) => d.suggestedFilename().endsWith('.gif')), 10000);
+  let ok = false;
+  if (gif) {
+    const { readFileSync } = await import('fs');
+    const buf = readFileSync(await gif.path());
+    ok = buf.slice(0, 6).toString('ascii') === 'GIF89a' && buf[buf.length - 1] === 0x3b && buf.length > 1000;
+  }
+  check('canvas records to valid animated GIF', ok, gif ? 'got gif' : 'no gif');
+}
+
 /* ---- report ---- */
 console.log('\n=== Grab Anything smoke test ===');
 let failed = 0;

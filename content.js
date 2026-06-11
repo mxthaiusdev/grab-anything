@@ -584,40 +584,135 @@
 
   let activeRecorder = null;
 
-  function recordCanvasToggle(canvasEl, btn) {
-    if (activeRecorder) { activeRecorder.stop(); return; }
-    if (typeof canvasEl.captureStream !== 'function' || typeof MediaRecorder === 'undefined') {
-      toast("This browser can't record this canvas."); stopPicker(); return;
-    }
-    let stream;
-    try { stream = canvasEl.captureStream(30); } catch (e) { toast('Could not capture this canvas: ' + e.message); stopPicker(); return; }
-    const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
-      .find((m) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || 'video/webm';
-    let rec;
-    try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12000000 }); }
-    catch (e) { toast('Recording not supported here: ' + e.message); stopPicker(); return; }
+  function findVideo(el) {
+    if (el.tagName === 'VIDEO') return el;
+    return el.querySelector ? el.querySelector('video') : null;
+  }
 
-    const chunks = [];
-    rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  // A frame source draws the live element into an arbitrary 2D context.
+  // kind 'direct' needs no permission; 'display' uses a screen-capture prompt.
+  async function makeFrameSource(el) {
+    const canvas = findCanvas(el);
+    if (canvas) {
+      const w = canvas.width || canvas.clientWidth || 640;
+      const h = canvas.height || canvas.clientHeight || 360;
+      return { kind: 'direct', w, h, draw: (ctx, dw, dh) => ctx.drawImage(canvas, 0, 0, dw, dh), cleanup() {} };
+    }
+    const video = findVideo(el);
+    if (video && video.videoWidth) {
+      return { kind: 'direct', w: video.videoWidth, h: video.videoHeight,
+               draw: (ctx, dw, dh) => ctx.drawImage(video, 0, 0, dw, dh), cleanup() {} };
+    }
+    // anything else (CSS animations, mixed layouts) → capture the tab, crop to el
+    if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 30 }, audio: false, preferCurrentTab: true,
+      });
+      const v = document.createElement('video');
+      v.srcObject = stream; v.muted = true;
+      await v.play().catch(() => {});
+      const r0 = el.getBoundingClientRect();
+      return {
+        kind: 'display', w: Math.max(2, Math.round(r0.width)), h: Math.max(2, Math.round(r0.height)),
+        draw: (ctx, dw, dh) => {
+          const r = el.getBoundingClientRect();
+          const fx = v.videoWidth / innerWidth, fy = v.videoHeight / innerHeight;
+          ctx.drawImage(v, r.left * fx, r.top * fy, r.width * fx, r.height * fy, 0, 0, dw, dh);
+        },
+        cleanup: () => stream.getTracks().forEach((t) => t.stop()),
+      };
+    }
+    return null;
+  }
+
+  function fitWithin(w, h, max) {
+    if (w <= max && h <= max) return [Math.round(w), Math.round(h)];
+    const s = max / Math.max(w, h);
+    return [Math.max(2, Math.round(w * s)), Math.max(2, Math.round(h * s))];
+  }
+
+  // format: 'webm' | 'gif'. Toggles: second call stops & saves.
+  async function grabMotion(el, format, btn) {
+    if (activeRecorder) { activeRecorder.stop(); return; }
+    if (typeof MediaRecorder === 'undefined' && format === 'webm') { toast("This browser can't record video."); stopPicker(); return; }
+
+    let source;
+    try { source = await makeFrameSource(el); }
+    catch (e) {
+      toast(e && e.name === 'NotAllowedError' ? 'Screen capture was cancelled.' : 'Could not start capture: ' + (e && e.message));
+      stopPicker(); return;
+    }
+    if (!source) { toast('Nothing animated to record here.'); stopPicker(); return; }
+
+    const cap = format === 'gif' ? 480 : 1280;
+    const [cw, ch] = fitWithin(source.w, source.h, cap);
+    const work = document.createElement('canvas');
+    work.width = cw; work.height = ch;
+    const wctx = work.getContext('2d', { willReadFrequently: format === 'gif' });
+
+    const name = (componentName(el) || 'animation');
     const startT = performance.now();
-    const tick = setInterval(() => {
+    let rafId = 0, frameTimer = 0, recorder = null, stream = null;
+    const gifFrames = [];
+    let stopped = false;
+
+    const drawLoop = () => { try { source.draw(wctx, cw, ch); } catch (_) {} rafId = requestAnimationFrame(drawLoop); };
+
+    function finish() {
+      if (stopped) return;
+      stopped = true;
+      cancelAnimationFrame(rafId);
+      clearInterval(frameTimer);
+      clearInterval(uiTick);
+      clearTimeout(auto);
+      activeRecorder = null;
+
+      const done = (blob, ext, label) => {
+        try { source.cleanup(); } catch (_) {}
+        if (stream) stream.getTracks().forEach((t) => t.stop());
+        if (!blob || blob.size < 200) toast('Recording came out empty — the content may block capture (e.g. DRM).');
+        else { saveBlob(blob, name + '.' + ext); toast(label); }
+        stopPicker();
+      };
+
+      if (format === 'gif') {
+        if (!gifFrames.length) { done(null); return; }
+        toast('Encoding GIF…');
+        setTimeout(() => done(GrabGif.encode(gifFrames, cw, ch), 'gif', 'Saved as GIF.'), 30);
+      } else {
+        recorder.onstop = () => done(new Blob(chunks, { type: mime }), 'webm', 'Animation saved as video (.webm).');
+        if (recorder.state !== 'inactive') recorder.stop(); else recorder.onstop();
+      }
+    }
+
+    let chunks = [], mime = '';
+    const uiTick = setInterval(() => {
       if (btn) btn.textContent = '■ Stop & save (' + Math.round((performance.now() - startT) / 1000) + 's)';
     }, 500);
-    const auto = setTimeout(() => { if (rec.state !== 'inactive') rec.stop(); }, 60000); // 60s safety cap
+    const auto = setTimeout(finish, format === 'gif' ? 15000 : 60000); // gif capped tighter
+    activeRecorder = { stop: finish };
 
-    rec.onstop = () => {
-      clearInterval(tick); clearTimeout(auto);
-      stream.getTracks().forEach((t) => t.stop());
-      activeRecorder = null;
-      const blob = new Blob(chunks, { type: mime });
-      if (blob.size < 200) toast('Recording came out empty — this canvas may block capture.');
-      else { saveBlob(blob, (componentName(canvasEl) || 'animation') + '.webm'); toast('Animation saved as video (.webm).'); }
-      stopPicker();
-    };
+    drawLoop();
 
-    activeRecorder = { stop: () => { if (rec.state !== 'inactive') rec.stop(); } };
-    rec.start();
-    toast('Recording the animation… click Stop to save (auto-stops at 60s).');
+    if (format === 'gif') {
+      const FPS = 12;
+      frameTimer = setInterval(() => {
+        if (gifFrames.length >= 180) { finish(); return; } // ~15s hard cap
+        try {
+          const img = wctx.getImageData(0, 0, cw, ch);
+          gifFrames.push({ rgba: img.data, delayMs: 1000 / FPS });
+        } catch (e) { clearInterval(frameTimer); toast('Frames are protected (cross-origin/DRM) — can\'t make a GIF.'); finish(); }
+      }, 1000 / FPS);
+      toast('Recording GIF… click Stop to save (auto-stops at 15s).');
+    } else {
+      mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+        .find((m) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || 'video/webm';
+      try { stream = work.captureStream(30); recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12000000 }); }
+      catch (e) { toast('Recording not supported here: ' + e.message); finish(); return; }
+      recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      recorder.start();
+      toast('Recording the animation… click Stop to save (auto-stops at 60s).');
+    }
     if (btn) btn.textContent = '■ Stop & save (0s)';
   }
 
@@ -957,20 +1052,27 @@
         toast('SVG copied — paste it into Figma or a file.');
       }));
     }
-    // live canvas/WebGL → record the motion to a video (manages its own
-    // start/stop lifecycle, so it bypasses the auto-close mkBtn wrapper)
-    const canvasEl = findCanvas(el);
-    if (canvasEl) {
-      const recBtn = document.createElement('button');
-      recBtn.type = 'button';
-      recBtn.textContent = '● Record video';
-      recBtn.setAttribute('data-ga-action', 'record');
-      Object.assign(recBtn.style, {
-        font: '13px -apple-system, system-ui, sans-serif', color: '#fff',
-        background: '#E0245E', border: 'none', borderRadius: '7px', padding: '7px 12px', cursor: 'pointer',
-      });
-      recBtn.addEventListener('click', (ev) => { ev.stopPropagation(); recordCanvasToggle(canvasEl, recBtn); });
-      bar.append(recBtn);
+    // Motion capture: canvas/WebGL/video record with no prompt; any other
+    // element falls back to a screen-capture prompt. These buttons manage
+    // their own start/stop lifecycle, bypassing the auto-close mkBtn wrapper.
+    const hasDirect = !!(findCanvas(el) || (findVideo(el) && findVideo(el).videoWidth));
+    const canDisplay = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+    if (hasDirect || canDisplay) {
+      const recordBtn = (label, action, format, bg) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        b.setAttribute('data-ga-action', action);
+        Object.assign(b.style, {
+          font: '13px -apple-system, system-ui, sans-serif', color: '#fff',
+          background: bg, border: 'none', borderRadius: '7px', padding: '7px 12px', cursor: 'pointer',
+        });
+        b.addEventListener('click', (ev) => { ev.stopPropagation(); grabMotion(el, format, b); });
+        return b;
+      };
+      const verb = hasDirect ? 'Record video' : 'Record area';
+      bar.append(recordBtn('● ' + verb, 'record', 'webm', '#E0245E'));
+      bar.append(recordBtn('◉ Save GIF', 'record-gif', 'gif', '#B91456'));
     }
     bar.append(mkBtn('Cancel', 'cancel', () => {}));
 
