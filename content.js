@@ -556,7 +556,23 @@
     return false;
   }
 
+  // canvas/WebGL content is painted pixels, not markup — an HTML export of
+  // it would be an empty <canvas> shell
+  function canvasDominated(el) {
+    const c = el.tagName === 'CANVAS' ? el : el.querySelector && el.querySelector('canvas');
+    if (!c) return false;
+    const er = el.getBoundingClientRect();
+    const cr = c.getBoundingClientRect();
+    if (!er.width || !er.height) return false;
+    return (cr.width * cr.height) / (er.width * er.height) > 0.6;
+  }
+
   async function exportComponent(rootEl, filename) {
+    if (canvasDominated(rootEl)) {
+      toast("That's a live canvas animation (WebGL) — no HTML design exists, so here's a pixel-perfect image instead.");
+      await pickerShot(rootEl);
+      return;
+    }
     saveBlob(new Blob([await buildComponentHtml(rootEl)], { type: 'text/html' }), filename);
   }
 
@@ -1004,6 +1020,10 @@
   }
 
   async function copyDesign(el) {
+    if (canvasDominated(el)) {
+      toast("That's a live canvas animation (WebGL) — there's no HTML to copy. Use 'Save as image' for it.");
+      return;
+    }
     const html = buildInlineHtml(el);
     const plain = await buildComponentHtml(el);
     await navigator.clipboard.write([new ClipboardItem({

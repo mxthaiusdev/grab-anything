@@ -40,6 +40,7 @@ body { font-family: 'TestFont', sans-serif; }
 <div class="hero" id="hero">hero text</div>
 <a id="doc" href="/doc.pdf">a document</a>
 <video id="vid" src="/clip.mp4" width="120" height="60"></video>
+<canvas id="cv" width="200" height="120"></canvas>
 <p id="text">some words to right-click on</p>
 </body></html>`;
 
@@ -484,6 +485,23 @@ check('font card exports', fontsDone, pageDownloads.join(','));
 await sw.evaluate(({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-fullshot' }, { frameId: 0 }), { tabId });
 const fullshotDone = await waitFor(async () => pageDownloads.find((f) => f.endsWith('-page.png')), 15000);
 check('full-page screenshot exports', fullshotDone, pageDownloads.join(','));
+
+/* ---- 26. save-design on a canvas falls back to pixel capture ---- */
+await page.evaluate(() => { const x = document.getElementById('cv').getContext('2d'); x.fillStyle = '#5757F7'; x.fillRect(0, 0, 200, 120); });
+await sw.evaluate(
+  ({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-picker-start' }, { frameId: 0 }),
+  { tabId }
+);
+await page.waitForTimeout(250);
+const cvBox = await page.locator('#cv').boundingBox();
+await page.mouse.move(cvBox.x + 20, cvBox.y + 20);
+await page.waitForTimeout(250);
+await page.mouse.click(cvBox.x + 20, cvBox.y + 20);
+await page.waitForTimeout(250);
+await page.click('[data-ga-bar] [data-ga-action="design"]');
+const cvShot = await waitFor(async () => pageDownloads.find((f) => f === 'cv.png'), 12000);
+check('canvas design-save falls back to image', cvShot, pageDownloads.join(','));
+check('canvas design-save produced no html shell', !pageDownloads.includes('cv.html'));
 
 /* ---- report ---- */
 console.log('\n=== Grab Anything smoke test ===');
