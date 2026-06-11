@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grab Anything — free image, font & video downloader for Chrome</title>
+<meta name="description" content="Free Chrome extension that downloads anything from any page: images at full quality, SVG logos, fonts, video, whole page designs. 100% local, zero tracking.">
+<!-- TODO: when the final domain is chosen, replace grabanything.netlify.app everywhere below -->
+<link rel="canonical" href="https://grabanything.netlify.app/">
+<meta property="og:title" content="Grab Anything — if you can see it, you can save it">
+<meta property="og:description" content="Images at full quality, logos as SVG, fonts, video, whole designs — one right-click. Free, local, zero tracking.">
+<meta property="og:image" content="https://grabanything.netlify.app/assets/screenshot-picker.png">
+<meta property="og:url" content="https://grabanything.netlify.app/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Grab Anything — if you can see it, you can save it">
+<meta name="twitter:image" content="https://grabanything.netlify.app/assets/screenshot-picker.png">
+<link rel="icon" href="assets/icon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Grab Anything","operatingSystem":"Chrome","applicationCategory":"BrowserApplication","description":"Free Chrome extension that downloads anything from any page: images at full quality, SVG logos, fonts, video, whole page designs.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<style>
+  :root {
+    --ink: #0E0E1A;
+    --indigo: #5757F7;
+    --cyan: #06B6D4;
+    --ice: #EEEDFB;
+    --display: 'Anton', sans-serif;
+    --body: 'Inter', sans-serif;
+    --label: 'Space Grotesk', sans-serif;
+    --d1: clamp(54px, 8.6vw, 132px);
+    --d2: clamp(38px, 5.6vw, 84px);
+  }
+  * { margin: 0; box-sizing: border-box; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  body { font-family: var(--body); color: var(--ink); background: var(--ice); overflow-x: hidden; }
+  ::selection { background: var(--indigo); color: #fff; }
+  :focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; border-radius: 4px; }
+
+  h1, h2, .display { font-family: var(--display); font-weight: 400; text-transform: uppercase; line-height: .92; letter-spacing: .01em; }
+  h1 { font-size: var(--d1); }
+  h2 { font-size: var(--d2); }
+
+  .chip { display: inline-flex; align-items: center; gap: 8px; font-family: var(--label); font-weight: 700;
+          font-size: 13px; letter-spacing: .14em; text-transform: uppercase; background: var(--ink); color: #fff;
+          padding: 8px 14px; border-radius: 999px; }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); display: inline-block; }
+
+  .btn { display: inline-flex; align-items: center; gap: 10px; font-family: var(--label); font-weight: 700;
+         font-size: 15px; letter-spacing: .04em; text-decoration: none; padding: 16px 28px; border-radius: 14px;
+         border: 2px solid var(--ink); background: var(--ink); color: #fff; box-shadow: 5px 5px 0 rgba(14,14,26,.25);
+         transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
+  .btn:hover { transform: translate(-2px,-2px); box-shadow: 8px 8px 0 rgba(14,14,26,.3); }
+  .btn.light { background: #fff; color: var(--ink); }
+
+  /* ---------- nav ---------- */
+  nav { position: sticky; top: 0; z-index: 90; display: flex; align-items: center; justify-content: space-between;
+        padding: 14px clamp(18px, 4vw, 48px); background: rgba(238,237,251,.88); backdrop-filter: blur(10px);
+        border-bottom: 2px solid var(--ink); }
+  nav .wordmark { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-size: 22px;
+        letter-spacing: .02em; text-transform: uppercase; color: var(--ink); text-decoration: none; }
+  nav .wordmark img { width: 34px; height: 34px; border-radius: 9px; }
+  nav .links { display: flex; gap: 26px; align-items: center; font-family: var(--label); font-weight: 700; font-size: 14px; }
+  nav .links a { color: var(--ink); text-decoration: none; opacity: .75; }
+  nav .links a.btn, footer a.btn { color: #fff; opacity: 1; }
+  footer a.btn.light { color: var(--ink); }
+  nav .links a:hover { opacity: 1; }
+  nav .btn { padding: 11px 20px; box-shadow: 4px 4px 0 rgba(14,14,26,.2); }
+  @media (max-width: 760px) { nav .links a:not(.btn) { display: none; } }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; background: var(--indigo); color: #fff; padding: clamp(60px, 9vw, 120px) clamp(18px, 4vw, 48px) clamp(70px, 8vw, 110px); overflow: hidden; }
+  .hero .pattern { position: absolute; right: -140px; top: -140px; width: 720px; height: 720px; opacity: .3; pointer-events: none; }
+  .hero-grid { position: relative; display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(28px, 5vw, 72px); max-width: 1280px; margin: 0 auto; align-items: center; }
+  .hero h1 .accent { background: var(--ink); color: var(--cyan); padding: 0 .12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .hero p.lede { margin-top: 26px; font-size: clamp(16px, 1.6vw, 20px); line-height: 1.65; max-width: 54ch; color: rgba(255,255,255,.88); }
+  .hero .cta-row { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .hero .kbd-hint { font-family: var(--label); font-size: 13px; color: rgba(255,255,255,.92); }
+  kbd { font-family: var(--label); background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.4); border-radius: 6px; padding: 2px 7px; font-size: 12px; }
+
+  .hero-stage { position: relative; display: flex; flex-direction: column; gap: 18px; align-items: stretch; }
+  .float-card { background: #fff; color: var(--ink); border: 2px solid var(--ink); border-radius: 16px;
+                box-shadow: 7px 7px 0 rgba(14,14,26,.35); overflow: hidden; }
+  .float-card.img img { width: 100%; height: auto; display: block; }
+  .float-card.font { padding: 18px 22px; }
+  .float-card.font .fam { font-family: var(--label); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .6; }
+  .float-card.font .spec { font-size: 30px; font-weight: 700; margin-top: 4px; }
+  .float-row { display: flex; gap: 18px; }
+  .float-card.logo { flex: 1; display: flex; align-items: center; justify-content: center; padding: 18px; }
+  .float-card.logo svg { width: 56px; height: 56px; }
+  .float-card.swatch { flex: 1.6; display: flex; }
+  .float-card.swatch i { flex: 1; height: 92px; }
+  @media (max-width: 980px) { .hero-grid { grid-template-columns: 1fr; } .hero-stage { max-width: 460px; } }
+
+  /* ---------- the roaming picker box (site signature) ---------- */
+  #pickbox { position: fixed; z-index: 80; border: 2.5px solid var(--cyan); background: rgba(6,182,212,.1);
+             border-radius: 6px; pointer-events: none; opacity: 0;
+             transition: all .5s cubic-bezier(.6,.05,.2,1), opacity .3s ease; }
+  #picklabel { position: fixed; z-index: 81; background: var(--ink); color: #fff; font-family: var(--label);
+               font-weight: 700; font-size: 12.5px; letter-spacing: .03em; padding: 4px 11px; border-radius: 6px;
+               pointer-events: none; opacity: 0; transition: all .5s cubic-bezier(.6,.05,.2,1), opacity .3s ease; white-space: nowrap; }
+  #pickbox.snap, #picklabel.snap { transition: opacity .3s ease; }
+  #pickbox.pop { animation: pop .35s ease; }
+  @keyframes pop { 45% { transform: scale(1.02); } }
+
+  /* ---------- marquee tapes ---------- */
+  .tape { background: var(--ink); color: var(--ice); overflow: hidden; padding: 18px 0; }
+  .tape.alt { background: var(--cyan); color: var(--ink); }
+  .tape-inner { display: flex; width: max-content; animation: tape 26s linear infinite; }
+  .tape.alt .tape-inner { animation-direction: reverse; }
+  .tape span { font-family: var(--display); font-size: clamp(26px, 3.4vw, 44px); text-transform: uppercase; padding: 0 22px; white-space: nowrap; }
+  .tape em { color: var(--cyan); font-style: normal; }
+  .tape.alt em { color: var(--indigo); }
+  @keyframes tape { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .tape-inner { animation: none; } }
+
+  /* ---------- sections ---------- */
+  section { padding: clamp(70px, 9vw, 130px) clamp(18px, 4vw, 48px); }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+  .sec-head { display: flex; flex-direction: column; gap: 18px; margin-bottom: clamp(36px, 5vw, 64px); }
+  .seo-sub { font-size: 17px; line-height: 1.65; max-width: 64ch; opacity: .8; }
+
+  .dark { background: var(--ink); color: var(--ice); }
+  .dark .chip { background: var(--cyan); color: var(--ink); }
+  .dark .chip i { background: var(--ink); }
+  .indigo-sec { background: var(--indigo); color: #fff; }
+  .indigo-sec .chip { background: var(--ink); }
+
+  /* features grid */
+  .grid6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 980px) { .grid6 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 620px) { .grid6 { grid-template-columns: 1fr; } }
+  .feat { background: #fff; border: 2px solid var(--ink); border-radius: 18px; padding: 26px;
+          box-shadow: 6px 6px 0 rgba(14,14,26,.16); transition: transform .15s ease, box-shadow .15s ease; }
+  .feat:hover { transform: translate(-3px,-3px); box-shadow: 10px 10px 0 rgba(14,14,26,.2); }
+  .feat svg { width: 34px; height: 34px; stroke: var(--indigo); }
+  .feat h3 { font-family: var(--label); font-weight: 700; font-size: 19px; margin: 14px 0 8px; }
+  .feat p { font-size: 15px; line-height: 1.6; opacity: .82; }
+  .feat.fill-i { background: var(--indigo); border-color: var(--ink); color: #fff; }
+  .feat.fill-i p { opacity: .92; }
+  .feat.fill-i svg { stroke: #fff; }
+  .feat.fill-c { background: var(--cyan); color: var(--ink); }
+  .feat.fill-c svg { stroke: var(--ink); }
+
+  /* picker demo */
+  .demo-wrap { display: grid; grid-template-columns: 1fr 1.2fr; gap: clamp(28px, 5vw, 64px); align-items: center; }
+  @media (max-width: 980px) { .demo-wrap { grid-template-columns: 1fr; } }
+  .browser { background: #fff; border: 2px solid var(--ink); border-radius: 18px; overflow: hidden; box-shadow: 10px 10px 0 rgba(14,14,26,.22); }
+  .browser .bar { display: flex; gap: 7px; padding: 12px 16px; border-bottom: 2px solid var(--ink); background: var(--ice); }
+  .browser .bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--ink); opacity: .25; }
+  .browser .page { padding: 28px; display: grid; gap: 18px; }
+  [data-demo] { cursor: pointer; }
+  .demo-nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border: 2px solid var(--ink); border-radius: 12px; }
+  .demo-nav b { font-family: var(--display); text-transform: uppercase; letter-spacing: .03em; }
+  .demo-nav span { font-size: 13px; opacity: .6; }
+  .demo-hero { border-radius: 12px; overflow: hidden; border: 2px solid var(--ink); }
+  .demo-hero img { width: 100%; height: auto; display: block; }
+  .demo-cols { display: flex; gap: 14px; }
+  .demo-cols .col { flex: 1; border: 2px solid var(--ink); border-radius: 12px; padding: 14px; font-size: 13.5px; line-height: 1.5; }
+  .demo-cols .col b { display: block; margin-bottom: 4px; font-size: 15px; }
+  .try-hint { margin-top: 14px; font-family: var(--label); font-weight: 700; font-size: 14px; color: var(--indigo); }
+  .try-hint .touch { display: none; }
+  @media (hover: none) { .try-hint .mouse { display: none; } .try-hint .touch { display: inline; } }
+  #demobar { position: fixed; z-index: 82; display: none; gap: 6px; background: var(--ink); padding: 7px; border-radius: 11px; box-shadow: 0 10px 30px rgba(14,14,26,.35); }
+  #demobar button { font-family: var(--label); font-weight: 700; font-size: 12.5px; color: #fff; background: var(--indigo);
+                    border: 0; border-radius: 7px; padding: 7px 11px; cursor: pointer; }
+  #demobar button:last-child { background: #3a3a4a; }
+  #toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(90px); z-index: 95;
+           background: var(--ink); color: #fff; font-family: var(--label); font-weight: 700; font-size: 14px;
+           padding: 12px 22px; border-radius: 10px; transition: transform .35s cubic-bezier(.2,.9,.3,1.2); }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* resolution slider — full-bleed moment in the dark band */
+  .res-head { max-width: 1280px; margin: 0 auto clamp(30px, 4vw, 54px); display: grid; grid-template-columns: auto 1fr; gap: clamp(24px, 4vw, 64px); align-items: end; }
+  @media (max-width: 980px) { .res-head { grid-template-columns: 1fr; } }
+  .res-head p { font-size: 17px; line-height: 1.7; max-width: 52ch; color: rgba(238,237,251,.8); }
+  .res-frame { position: relative; max-width: 1280px; margin: 0 auto; border: 2px solid var(--ice); border-radius: 18px; overflow: hidden; box-shadow: 12px 12px 0 rgba(6,182,212,.35); user-select: none; touch-action: none; }
+  .res-frame img, .res-frame canvas { width: 100%; height: auto; display: block; }
+  .res-frame canvas { position: absolute; inset: 0; height: 100%; clip-path: inset(0 calc(100% - var(--cut, 50%)) 0 0); image-rendering: pixelated; }
+  .res-handle { position: absolute; top: 0; bottom: 0; left: var(--cut, 50%); width: 3px; background: var(--cyan); cursor: ew-resize; }
+  .res-handle::after { content: '◂ ▸'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+        background: var(--cyan); color: var(--ink); font-size: 13px; font-weight: 700; padding: 8px 10px; border-radius: 999px; white-space: nowrap; }
+  .res-tag { position: absolute; bottom: 12px; font-family: var(--label); font-weight: 700; font-size: 12px; letter-spacing: .08em;
+             background: rgba(14,14,26,.82); color: #fff; padding: 5px 11px; border-radius: 7px; }
+  .res-tag.l { left: 12px; } .res-tag.r { right: 12px; }
+
+  /* gallery — electric block */
+  .gal-wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: center; }
+  @media (max-width: 980px) { .gal-wrap { grid-template-columns: 1fr; } }
+  .gal-shot { position: relative; border: 2px solid var(--ink); border-radius: 18px; overflow: visible;
+              transform: rotate(-1.6deg); background: #fff; box-shadow: 10px 10px 0 rgba(14,14,26,.3); }
+  .gal-shot img { width: 100%; height: auto; display: block; border-radius: 16px; }
+  .gal-sticker { position: absolute; top: -14px; right: -10px; transform: rotate(4deg); background: var(--cyan); color: var(--ink);
+                 font-family: var(--label); font-weight: 700; font-size: 13px; padding: 7px 14px; border: 2px solid var(--ink); border-radius: 8px; }
+  .indigo-sec p.body { margin-top: 22px; font-size: 17px; line-height: 1.7; max-width: 46ch; color: rgba(255,255,255,.9); }
+
+  /* trust */
+  .trust-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 18px; }
+  @media (max-width: 900px) { .trust-grid { grid-template-columns: 1fr; } }
+  .trust-card { background: #fff; border: 2px solid var(--ink); border-radius: 18px; padding: 28px; box-shadow: 6px 6px 0 rgba(14,14,26,.16); }
+  .trust-card h3 { font-family: var(--label); font-weight: 700; font-size: 19px; margin-bottom: 12px; }
+  .trust-card p { font-size: 15px; line-height: 1.65; }
+  .perm { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
+  .perm dt { font-family: var(--label); font-weight: 700; font-size: 14px; color: var(--indigo); white-space: nowrap; }
+  .perm dd { font-size: 14.5px; line-height: 1.55; opacity: .85; margin: 0 0 10px; }
+  .trust-card a { color: var(--indigo); font-weight: 600; }
+
+  /* FAQ */
+  .faq details { background: #fff; border: 2px solid var(--ink); border-radius: 14px; margin-bottom: 12px;
+                 box-shadow: 5px 5px 0 rgba(14,14,26,.14); overflow: hidden; }
+  .faq summary { cursor: pointer; padding: 18px 22px; font-family: var(--label); font-weight: 700; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; font-size: 24px; color: var(--indigo); flex-shrink: 0; }
+  .faq details[open] summary::after { content: '–'; }
+  .faq details p { padding: 0 22px 20px; font-size: 15px; line-height: 1.65; opacity: .85; max-width: 70ch; }
+
+  /* privacy */
+  .privacy .row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
+  .pill { font-family: var(--label); font-weight: 700; font-size: 14px; letter-spacing: .06em; text-transform: uppercase;
+          border: 2px solid var(--cyan); color: var(--cyan); border-radius: 999px; padding: 10px 20px; }
+
+  /* footer */
+  footer { background: var(--indigo); color: #fff; padding: clamp(60px, 8vw, 100px) clamp(18px, 4vw, 48px) 40px; }
+  footer .big { font-family: var(--display); text-transform: uppercase; font-size: var(--d1); line-height: .9; }
+  footer .cols { display: flex; gap: 48px; flex-wrap: wrap; justify-content: space-between; margin-top: 48px; align-items: flex-end; }
+  footer .links { display: flex; gap: 26px; flex-wrap: wrap; font-family: var(--label); font-weight: 700; font-size: 14px; align-items: center; }
+  footer a { color: #fff; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  footer .soon { opacity: .55; }
+  footer .fine { margin-top: 38px; font-size: 12.5px; opacity: .6; }
+  footer .fine a { text-decoration: underline; }
+
+  /* reveals — only hidden when JS is running */
+  html.js .rv { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  html.js .rv.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { html.js .rv { opacity: 1; transform: none; transition: none; } }
+</style>
+</head>
+<body>
+
+<div id="pickbox" aria-hidden="true"></div><div id="picklabel" aria-hidden="true"></div>
+<div id="demobar"><button data-act="Saved hero.png ✓">Save as image</button><button data-act="Saved design.html ✓">Save design</button><button data-act="Copied ✓">Copy</button></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<nav>
+  <a class="wordmark" href="#"><img src="assets/icon-128.png" alt="Grab Anything logo">Grab Anything</a>
+  <div class="links">
+    <a href="#grabs">What it grabs</a>
+    <a href="#picker">The picker</a>
+    <a href="#faq">FAQ</a>
+    <a class="btn cta" href="#get">Add to Chrome</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <svg class="pattern" viewBox="0 0 720 720" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g stroke="#fff" stroke-width="1.6">
+      <rect x="60" y="60" width="600" height="600" rx="150"/><rect x="105" y="105" width="510" height="510" rx="128"/>
+      <rect x="150" y="150" width="420" height="420" rx="106"/><rect x="195" y="195" width="330" height="330" rx="84"/>
+      <rect x="240" y="240" width="240" height="240" rx="62"/><rect x="285" y="285" width="150" height="150" rx="40"/>
+    </g>
+    <path d="M360 320 v52 M330 352 l30 32 30-32 M324 408 h72" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="hero-grid">
+    <div>
+      <span class="chip rv"><i></i>Free Chrome extension</span>
+      <h1 class="rv" style="margin-top:18px">If you can<br>see it, you<br>can <span class="accent">save it.</span></h1>
+      <p class="lede rv">Right-click or point-and-pick to download anything on the internet — images at the full quality the site has, logos as crisp SVG, the fonts a page uses, video, even whole sections of a design.</p>
+      <div class="cta-row rv">
+        <a class="btn light cta" href="#get">⬇ Add to Chrome — free</a>
+        <span class="kbd-hint"><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> once installed</span>
+      </div>
+    </div>
+    <div class="hero-stage rv">
+      <div class="float-card img" data-pick="image 800×600"><img src="assets/art.png" width="800" height="600" alt="aurora artwork example"></div>
+      <div class="float-card font" data-pick="font used here">
+        <div class="fam">Font used here</div>
+        <div class="spec">Aa Bb Cc 0123 — grab it</div>
+      </div>
+      <div class="float-row">
+        <div class="float-card logo" data-pick="logo (SVG)">
+          <svg viewBox="0 0 128 128" role="img" aria-label="download logo"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5757F7"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs><rect x="4" y="4" width="120" height="120" rx="28" fill="url(#lg)"/><path d="M64 28 v36 M42 50 L64 74 86 50 M38 96 h52" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </div>
+        <div class="float-card swatch" data-pick="color palette" aria-label="color palette">
+          <i style="background:#5757F7"></i><i style="background:#06B6D4"></i><i style="background:#0E0E1A"></i><i style="background:#EEEDFB"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="tape" aria-hidden="true"><div class="tape-inner">
+  <span>Images <em>✦</em> Logos <em>✦</em> Fonts <em>✦</em> Video <em>✦</em> Whole designs <em>✦</em> Palettes <em>✦</em> Backgrounds <em>✦</em>&nbsp;</span>
+  <span>Images <em>✦</em> Logos <em>✦</em> Fonts <em>✦</em> Video <em>✦</em> Whole designs <em>✦</em> Palettes <em>✦</em> Backgrounds <em>✦</em>&nbsp;</span>
+</div></div>
+
+<section id="grabs">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="chip"><i></i>What it grabs</span>
+      <h2>Stuff browsers<br>make annoying.</h2>
+      <p class="seo-sub">Grab Anything is a free image, font and video downloader for Chrome — one right-click for the things that normally take dev tools and twenty minutes.</p>
+    </div>
+    <div class="grid6">
+      <div class="feat fill-i rv" data-pick="best-quality image">
+        <svg viewBox="0 0 34 34" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="28" height="24" rx="4"/><circle cx="12" cy="13" r="3"/><path d="M3 24 l8-7 6 5 7-8 7 8"/></svg>
+        <h3>Images at full quality</h3><p>Thumbnails get auto-upgraded to the CDN original — YouTube avatars, video stills, WordPress, Twitter. WebP saved as PNG, automatically.</p></div>
+      <div class="feat rv" data-pick="logo (SVG)">
+        <svg viewBox="0 0 34 34" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 4 L30 17 17 30 4 17 Z"/><circle cx="17" cy="4" r="2.4"/><circle cx="30" cy="17" r="2.4"/><circle cx="17" cy="30" r="2.4"/><circle cx="4" cy="17" r="2.4"/></svg>
+        <h3>Logos as crisp SVG</h3><p>Most site logos are inline SVG that browsers give you no way to save. One right-click — including a copy that pastes straight into Figma.</p></div>
+      <div class="feat rv" data-pick="font used here">
+        <svg viewBox="0 0 34 34" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 28 L15 6 L24 28 M9.5 21 h11"/><path d="M28 16 v12"/></svg>
+        <h3>The fonts a page uses</h3><p>Right-click any text and download the actual font file. Google Fonts, self-hosted, variable fonts — all of it.</p></div>
+      <div class="feat rv" data-pick="whole design">
+        <svg viewBox="0 0 34 34" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="26" height="26" rx="4"/><path d="M4 12 h26 M13 12 v18"/></svg>
+        <h3>Whole designs</h3><p>Save a navbar, hero or footer as a working HTML+CSS file — hover states, media queries and fonts included. Or copy it, styles inlined.</p></div>
+      <div class="feat rv" data-pick="video file">
+        <svg viewBox="0 0 34 34" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="28" height="22" rx="5"/><path d="M14 12 l8 5 -8 5 Z"/></svg>
+        <h3>Video &amp; audio</h3><p>Real media files, alternate encodings, subtitles, posters. Plus a popup gallery of every file the page loaded — ZIP it all in one click.</p></div>
+      <div class="feat fill-c rv" data-pick="color palette">
+        <svg viewBox="0 0 34 34" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 4 C24 11 28 16 28 21 a11 11 0 0 1 -22 0 C6 16 10 11 17 4 Z"/><circle cx="13" cy="21" r="1.6"/><circle cx="21" cy="21" r="1.6"/></svg>
+        <h3>Palette &amp; font cards</h3><p>One click exports a site's color palette and type specimen as shareable cards. Moodboards in seconds.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="picker" style="padding-top:0">
+  <div class="wrap demo-wrap">
+    <div class="rv">
+      <span class="chip"><i></i>The element picker</span>
+      <h2 style="margin-top:18px;">Point.<br>Click.<br>Yours.</h2>
+      <p style="margin-top:22px; font-size:17px; line-height:1.7; max-width:46ch; opacity:.85;">Press <kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">Alt</kbd>+<kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">Shift</kbd>+<kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">G</kbd> and point at anything. Scroll to widen the selection. Click to save it as a pixel-perfect image or a working design file.</p>
+      <p class="try-hint">→ Try it on the fake page: <span class="mouse">hover, then click anything.</span><span class="touch">tap anything.</span></p>
+    </div>
+    <div class="browser rv" id="demo">
+      <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="page">
+        <div class="demo-nav" data-demo="navigation bar"><b>Atelier North</b><span>Collection · Journal · About</span></div>
+        <div class="demo-hero" data-demo="image 800×600"><img src="assets/art.png" width="800" height="600" alt="demo page artwork"></div>
+        <div class="demo-cols">
+          <div class="col" data-demo="card"><b>Oak series</b>Hand-joined, century-built. No screws, no shortcuts.</div>
+          <div class="col" data-demo="card"><b>Ash series</b>Light, fast-grain, butter finish. Small batches.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="dark">
+  <div class="res-head rv">
+    <div>
+      <span class="chip"><i></i>Full resolution</span>
+      <h2 style="margin-top:18px;">Never save the<br>thumbnail again.</h2>
+    </div>
+    <p>Pages render shrunken copies; the original sits on the CDN behind a size parameter. Grab Anything rewrites the URL, verifies the original exists, and downloads that instead. Drag the line — left is what sites hand you, right is what you actually get.</p>
+  </div>
+  <div class="res-frame rv" id="resframe">
+    <img id="resimg" src="assets/detail.png" width="1200" height="675" alt="resolution comparison — the fine print is only readable on the full-quality side">
+    <canvas id="rescanvas" aria-hidden="true"></canvas>
+    <div class="res-handle" id="reshandle" tabindex="0" role="slider" aria-label="resolution comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
+    <span class="res-tag l">what sites give you</span>
+    <span class="res-tag r">what you actually get</span>
+  </div>
+</section>
+
+<section class="indigo-sec">
+  <div class="wrap gal-wrap">
+    <div class="gal-shot rv"><img src="assets/screenshot-gallery.png" width="1280" height="800" alt="the gallery popup listing every image a page loaded, with ZIP export"><span class="gal-sticker">87 files → one ZIP</span></div>
+    <div class="rv">
+      <span class="chip"><i></i>The gallery</span>
+      <h2 style="margin-top:18px;">Every file.<br>One ZIP.</h2>
+      <p class="body">The toolbar popup lists every image, video and font the page loaded — even files JavaScript fetched behind the scenes. Pick a few or take everything as a single archive.</p>
+    </div>
+  </div>
+</section>
+
+<div class="tape alt" aria-hidden="true"><div class="tape-inner">
+  <span>Point <em>✦</em> Click <em>✦</em> Yours <em>✦</em> Right-click <em>✦</em> Saved <em>✦</em> Point <em>✦</em> Click <em>✦</em> Yours <em>✦</em> Right-click <em>✦</em> Saved <em>✦</em>&nbsp;</span>
+  <span>Point <em>✦</em> Click <em>✦</em> Yours <em>✦</em> Right-click <em>✦</em> Saved <em>✦</em> Point <em>✦</em> Click <em>✦</em> Yours <em>✦</em> Right-click <em>✦</em> Saved <em>✦</em>&nbsp;</span>
+</div></div>
+
+<section class="dark privacy" id="privacy">
+  <div class="wrap rv">
+    <span class="chip"><i></i>Privacy</span>
+    <h2 style="margin-top:18px;">Nothing leaves<br>your machine.</h2>
+    <div class="row">
+      <span class="pill">No accounts</span><span class="pill">No tracking</span><span class="pill">No servers</span><span class="pill">100% local</span>
+    </div>
+    <p style="margin-top:26px; max-width:60ch; line-height:1.7; color:rgba(238,237,251,.78);">No analytics, no telemetry, nothing phoned home — the code ships in the extension and runs on your device. Read the <a href="privacy.html" style="color:var(--cyan)">two-minute privacy policy</a>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="chip"><i></i>Who made this</span>
+      <h2>Built by one person,<br>not a data company.</h2>
+    </div>
+    <div class="trust-grid rv">
+      <div class="trust-card">
+        <h3>The maker</h3>
+        <p>Hi — I'm <b>Mathaius</b>, an indie developer in the West Midlands, UK. I built Grab Anything because saving a logo or a font off a website shouldn't require opening dev tools. No company behind it, no investors to feed data to — and nothing to sell you. The extension is free.</p>
+        <p style="margin-top:12px"><a href="https://github.com/mxthaiusdev">github.com/mxthaiusdev</a></p>
+      </div>
+      <div class="trust-card">
+        <h3>Why it asks for the permissions it asks for</h3>
+        <dl class="perm">
+          <dt>Read pages you visit</dt><dd>so right-clicking can detect the logo, font or design under your cursor — on any site you choose to use it on.</dd>
+          <dt>Downloads</dt><dd>to save the files you pick to your Downloads folder.</dd>
+          <dt>Observe page requests</dt><dd>so the popup can list the media a page loaded. Observation only — nothing is modified and nothing is sent anywhere.</dd>
+          <dt>Clipboard</dt><dd>only when you click "Copy image" or "Copy SVG".</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="faq" id="faq" style="padding-top:0">
+  <div class="wrap" style="max-width:880px">
+    <div class="sec-head rv"><span class="chip"><i></i>FAQ</span><h2>Fair questions.</h2></div>
+    <div class="rv">
+      <details><summary>Is it safe?</summary><p>Everything runs locally in your browser — there's no server, no account, and no analytics. The privacy policy is two minutes long because there's nothing to disclose: no data is collected, full stop. The permission list is explained in plain English above.</p></details>
+      <details><summary>Is it really free? What's the catch?</summary><p>Free, no trial, no locked features, no ads. It's an indie project; if it ever grows paid extras, the things on this page stay free.</p></details>
+      <details><summary>Does it work on every website?</summary><p>It works anywhere Chrome lets extensions run — which is almost everywhere except the Chrome Web Store itself and browser settings pages. Protected video streams (YouTube, Netflix) can't be saved: the video is assembled in memory from encrypted pieces, so there's no file to download. That's a browser-wide rule, not a missing feature.</p></details>
+      <details><summary>Is downloading this stuff legal?</summary><p>Saving things for personal use — study, reference, moodboards — is generally fine. Re-publishing someone's images, fonts or designs as your own isn't: assets stay licensed by their creators. Grab Anything gives you the file; the rights stay where they were.</p></details>
+      <details><summary>When is it on Edge and Firefox?</summary><p>Right after Chrome — the Edge version is the same build, and a Firefox port is ready and in testing. This page will link both the day they're live.</p></details>
+      <details><summary>What does "full quality" actually mean?</summary><p>Sites usually display a shrunken copy of an image while the original sits on their CDN. Grab Anything rewrites the image URL to request the original (it knows the patterns for YouTube, Twitter, Wikipedia, WordPress and more), checks it exists, and downloads that instead of the thumbnail.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer id="get">
+  <div class="wrap">
+    <div class="big rv">Grab<br>Anything</div>
+    <div class="cols rv">
+      <div class="links">
+        <a class="cta" href="#">⬇ Chrome — free</a>
+        <span class="soon">Edge — coming soon</span>
+        <span class="soon">Firefox — coming soon</span>
+        <a href="privacy.html">Privacy policy</a>
+      </div>
+      <a class="btn light cta" href="#">⬇ Add to Chrome — free</a>
+    </div>
+    <div class="fine">© 2026 Grab Anything · Built by <a href="https://github.com/mxthaiusdev">Mathaius</a> · Saving something doesn't mean you own it — assets are licensed by their creators.</div>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+ {"@type":"Question","name":"Is it safe?","acceptedAnswer":{"@type":"Answer","text":"Everything runs locally in your browser — no server, no account, no analytics. No data is collected."}},
+ {"@type":"Question","name":"Is it really free?","acceptedAnswer":{"@type":"Answer","text":"Free, no trial, no locked features, no ads."}},
+ {"@type":"Question","name":"Does it work on every website?","acceptedAnswer":{"@type":"Answer","text":"It works anywhere Chrome lets extensions run. Protected video streams (YouTube, Netflix) can't be saved — that's a browser-wide rule."}},
+ {"@type":"Question","name":"Is downloading this stuff legal?","acceptedAnswer":{"@type":"Answer","text":"Saving for personal use — study, reference, moodboards — is generally fine. Re-publishing someone's assets as your own isn't; assets stay licensed by their creators."}},
+ {"@type":"Question","name":"When is it on Edge and Firefox?","acceptedAnswer":{"@type":"Answer","text":"Right after Chrome — the Edge version is the same build, and a Firefox port is in testing."}},
+ {"@type":"Question","name":"What does full quality mean?","acceptedAnswer":{"@type":"Answer","text":"Sites display shrunken copies; Grab Anything rewrites the image URL to request the CDN original, verifies it exists, and downloads that instead of the thumbnail."}}]}
+</script>
+
+<script>
+  document.documentElement.classList.add('js');
+
+  // ---- store link: paste the listing URL here the day it's published ----
+  const STORE_URL = '';
+  const NOTIFY = 'mailto:mathaius3333@gmail.com?subject=Notify%20me%20when%20Grab%20Anything%20launches&body=Send%20me%20one%20email%20when%20it%27s%20live.';
+  document.querySelectorAll('a.cta').forEach((a) => {
+    if (STORE_URL) { a.href = STORE_URL; return; }
+    a.href = NOTIFY;
+    if (a.classList.contains('btn') && !a.closest('nav')) a.textContent = '🔔 Get notified — launching this week';
+    else if (a.closest('nav')) a.textContent = 'Get notified';
+    else a.textContent = '🔔 Get notified';
+  });
+
+  // ---- reveals ----
+  const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && e.target.classList.add('in')), { threshold: .12 });
+  document.querySelectorAll('.rv').forEach((el) => io.observe(el));
+
+  // ---- the roaming picker box ----
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const box = document.getElementById('pickbox');
+  const label = document.getElementById('picklabel');
+  document.querySelectorAll('[data-demo]').forEach((el) => el.setAttribute('data-pick', el.dataset.demo));
+  const targets = [...document.querySelectorAll('[data-pick]')];
+  let active = null;
+  let hoverLock = null;
+  let cycleIdx = 0;
+
+  // roam pool follows the reader: only currently-visible targets
+  const vis = new Set();
+  const roamIo = new IntersectionObserver(
+    (es) => es.forEach((e) => (e.isIntersecting ? vis.add(e.target) : vis.delete(e.target))),
+    { threshold: .5 }
+  );
+  targets.forEach((t) => roamIo.observe(t));
+
+  function place(el, snap) {
+    active = el;
+    const r = el.getBoundingClientRect();
+    box.classList.toggle('snap', !!snap);
+    label.classList.toggle('snap', !!snap);
+    if (r.bottom < 0 || r.top > innerHeight) {
+      box.style.opacity = 0;
+      label.style.opacity = 0;
+      box.style.left = r.left + 'px';
+      box.style.top = r.top + 'px';
+      return;
+    }
+    box.style.opacity = 1;
+    label.style.opacity = 1;
+    box.style.left = r.left - 5 + 'px';
+    box.style.top = r.top - 5 + 'px';
+    box.style.width = r.width + 10 + 'px';
+    box.style.height = r.height + 10 + 'px';
+    label.textContent = el.dataset.pick + '  ' + Math.round(r.width) + '×' + Math.round(r.height);
+    label.style.left = Math.max(8, r.left - 5) + 'px';
+    label.style.top = (r.top - 34 < 64 ? r.top + 9 : r.top - 34) + 'px'; // never collide with the sticky nav
+    if (!snap && !reduce) { box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop'); }
+  }
+
+  if (fine) {
+    targets.forEach((t) => {
+      t.addEventListener('mouseenter', () => { hoverLock = t; place(t, false); });
+      t.addEventListener('mouseleave', () => { hoverLock = null; });
+    });
+  }
+  if (fine && !reduce) {
+    setInterval(() => {
+      if (document.hidden || hoverLock) return;
+      const pool = [...vis];
+      if (!pool.length) { box.style.opacity = 0; label.style.opacity = 0; return; }
+      cycleIdx = (cycleIdx + 1) % pool.length;
+      place(pool[cycleIdx], false);
+    }, 2600);
+    place(targets[0], false);
+  }
+  // scroll/resize: track the active target 1:1, no easing lag
+  let raf = 0;
+  const track = () => { raf = 0; if (active) place(active, true); hideDemobar(); };
+  addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(track); }, { passive: true });
+  addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(track); });
+
+  // ---- picker demo: click/tap/keyboard -> action bar -> toast ----
+  const demobar = document.getElementById('demobar');
+  const toast = document.getElementById('toast');
+  let toastTimer = 0;
+  function hideDemobar() { demobar.style.display = 'none'; }
+
+  function openBar(el) {
+    place(el, false);
+    const r = el.getBoundingClientRect();
+    demobar.style.display = 'flex';
+    demobar.style.left = Math.max(10, Math.min(r.left, innerWidth - 340)) + 'px';
+    demobar.style.top = Math.min(innerHeight - 70, r.bottom + 10) + 'px';
+    demobar.querySelector('button').focus({ preventScroll: true });
+  }
+  document.querySelectorAll('[data-demo]').forEach((el) => {
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', 'demo: grab this ' + el.dataset.demo);
+    el.addEventListener('click', (e) => { e.stopPropagation(); openBar(el); });
+    el.addEventListener('focus', () => place(el, false));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openBar(el); }
+    });
+  });
+  document.addEventListener('click', (e) => { if (!demobar.contains(e.target)) hideDemobar(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideDemobar(); });
+  demobar.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    hideDemobar();
+    toast.textContent = b.dataset.act;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+  }));
+
+  // ---- resolution slider ----
+  const resimg = document.getElementById('resimg');
+  const rescanvas = document.getElementById('rescanvas');
+  const resframe = document.getElementById('resframe');
+  const reshandle = document.getElementById('reshandle');
+  function buildPixel() {
+    const w = resimg.clientWidth;
+    const h = resimg.clientHeight;
+    if (!w) return;
+    rescanvas.width = 48;
+    rescanvas.height = Math.round(48 * h / w);
+    rescanvas.getContext('2d').drawImage(resimg, 0, 0, rescanvas.width, rescanvas.height);
+    rescanvas.style.width = w + 'px';
+    rescanvas.style.height = h + 'px';
+  }
+  resimg.complete ? buildPixel() : resimg.addEventListener('load', buildPixel);
+  addEventListener('resize', buildPixel);
+  let cut = 50;
+  function applyCut() {
+    resframe.style.setProperty('--cut', cut + '%');
+    reshandle.style.left = cut + '%';
+    reshandle.setAttribute('aria-valuenow', Math.round(cut));
+  }
+  let dragging = false;
+  function setCutFromX(clientX) {
+    const r = resframe.getBoundingClientRect();
+    cut = Math.max(4, Math.min(96, ((clientX - r.left) / r.width) * 100));
+    applyCut();
+  }
+  resframe.addEventListener('pointerdown', (e) => { dragging = true; setCutFromX(e.clientX); });
+  addEventListener('pointermove', (e) => dragging && setCutFromX(e.clientX));
+  addEventListener('pointerup', () => { dragging = false; });
+  reshandle.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { cut = Math.max(4, cut - 4); applyCut(); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { cut = Math.min(96, cut + 4); applyCut(); e.preventDefault(); }
+  });
+</script>
+</body>
+</html>
