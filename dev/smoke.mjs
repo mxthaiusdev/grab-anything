@@ -503,6 +503,30 @@ const cvShot = await waitFor(async () => pageDownloads.find((f) => f === 'cv.png
 check('canvas design-save falls back to image', cvShot, pageDownloads.join(','));
 check('canvas design-save produced no html shell', !pageDownloads.includes('cv.html'));
 
+/* ---- 27. record a live canvas to webm video ---- */
+await page.evaluate(() => {
+  const c = document.getElementById('cv'); const x = c.getContext('2d'); let t = 0;
+  (function loop(){ t += 0.06; x.fillStyle = 'hsl(' + (t*50%360) + ',80%,50%)'; x.fillRect(0,0,200,120);
+    x.fillStyle = '#fff'; x.beginPath(); x.arc(100+Math.sin(t)*60, 60, 18, 0, 7); x.fill();
+    requestAnimationFrame(loop); })();
+});
+await sw.evaluate(({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-picker-start' }, { frameId: 0 }), { tabId });
+await page.waitForTimeout(250);
+const cv2 = await page.locator('#cv').boundingBox();
+await page.mouse.move(cv2.x + 20, cv2.y + 20); await page.waitForTimeout(250);
+await page.mouse.click(cv2.x + 20, cv2.y + 20); await page.waitForTimeout(250);
+const recPresent = await page.evaluate(() => !!document.querySelector('[data-ga-action="record"]'));
+check('record-video button appears on canvas', recPresent);
+if (recPresent) {
+  await page.click('[data-ga-action="record"]');
+  await page.waitForTimeout(2200);
+  await page.click('[data-ga-action="record"]');
+  const webm = await waitFor(async () => downloadObjs.find((d) => d.suggestedFilename().endsWith('.webm')), 10000);
+  let kb = 0;
+  if (webm) { const { statSync } = await import('fs'); kb = Math.round(statSync(await webm.path()).size / 1024); }
+  check('canvas records to non-empty webm', webm && kb > 5, webm ? kb + 'KB' : 'no webm');
+}
+
 /* ---- report ---- */
 console.log('\n=== Grab Anything smoke test ===');
 let failed = 0;

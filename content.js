@@ -569,11 +569,56 @@
 
   async function exportComponent(rootEl, filename) {
     if (canvasDominated(rootEl)) {
-      toast("That's a live canvas animation (WebGL) — no HTML design exists, so here's a pixel-perfect image instead.");
+      toast("That's a live canvas animation — no HTML to export. Saved a still image; use ‘Record video’ for the motion.");
       await pickerShot(rootEl);
       return;
     }
     saveBlob(new Blob([await buildComponentHtml(rootEl)], { type: 'text/html' }), filename);
+  }
+
+  /* ---- record a live canvas/video to a .webm (captures WebGL motion) ---- */
+  function findCanvas(el) {
+    if (el.tagName === 'CANVAS') return el;
+    return el.querySelector ? el.querySelector('canvas') : null;
+  }
+
+  let activeRecorder = null;
+
+  function recordCanvasToggle(canvasEl, btn) {
+    if (activeRecorder) { activeRecorder.stop(); return; }
+    if (typeof canvasEl.captureStream !== 'function' || typeof MediaRecorder === 'undefined') {
+      toast("This browser can't record this canvas."); stopPicker(); return;
+    }
+    let stream;
+    try { stream = canvasEl.captureStream(30); } catch (e) { toast('Could not capture this canvas: ' + e.message); stopPicker(); return; }
+    const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+      .find((m) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || 'video/webm';
+    let rec;
+    try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12000000 }); }
+    catch (e) { toast('Recording not supported here: ' + e.message); stopPicker(); return; }
+
+    const chunks = [];
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    const startT = performance.now();
+    const tick = setInterval(() => {
+      if (btn) btn.textContent = '■ Stop & save (' + Math.round((performance.now() - startT) / 1000) + 's)';
+    }, 500);
+    const auto = setTimeout(() => { if (rec.state !== 'inactive') rec.stop(); }, 60000); // 60s safety cap
+
+    rec.onstop = () => {
+      clearInterval(tick); clearTimeout(auto);
+      stream.getTracks().forEach((t) => t.stop());
+      activeRecorder = null;
+      const blob = new Blob(chunks, { type: mime });
+      if (blob.size < 200) toast('Recording came out empty — this canvas may block capture.');
+      else { saveBlob(blob, (componentName(canvasEl) || 'animation') + '.webm'); toast('Animation saved as video (.webm).'); }
+      stopPicker();
+    };
+
+    activeRecorder = { stop: () => { if (rec.state !== 'inactive') rec.stop(); } };
+    rec.start();
+    toast('Recording the animation… click Stop to save (auto-stops at 60s).');
+    if (btn) btn.textContent = '■ Stop & save (0s)';
   }
 
   async function buildComponentHtml(rootEl) {
@@ -911,6 +956,21 @@
         await navigator.clipboard.writeText(serializeSvg(svg));
         toast('SVG copied — paste it into Figma or a file.');
       }));
+    }
+    // live canvas/WebGL → record the motion to a video (manages its own
+    // start/stop lifecycle, so it bypasses the auto-close mkBtn wrapper)
+    const canvasEl = findCanvas(el);
+    if (canvasEl) {
+      const recBtn = document.createElement('button');
+      recBtn.type = 'button';
+      recBtn.textContent = '● Record video';
+      recBtn.setAttribute('data-ga-action', 'record');
+      Object.assign(recBtn.style, {
+        font: '13px -apple-system, system-ui, sans-serif', color: '#fff',
+        background: '#E0245E', border: 'none', borderRadius: '7px', padding: '7px 12px', cursor: 'pointer',
+      });
+      recBtn.addEventListener('click', (ev) => { ev.stopPropagation(); recordCanvasToggle(canvasEl, recBtn); });
+      bar.append(recBtn);
     }
     bar.append(mkBtn('Cancel', 'cancel', () => {}));
 
