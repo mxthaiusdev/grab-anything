@@ -72,12 +72,12 @@
   @media (max-width: 760px) { nav .links a:not(.btn) { display: none; } }
 
   /* ---------- hero ---------- */
-  .hero { position: relative; background: var(--indigo); color: #fff; padding: clamp(60px, 9vw, 120px) clamp(18px, 4vw, 48px) clamp(70px, 8vw, 110px); overflow: hidden; }
+  .hero { position: relative; background: var(--indigo); color: #fff; padding: clamp(56px, 8vw, 104px) clamp(18px, 4vw, 48px) clamp(56px, 6vw, 84px); overflow: hidden; }
   .hero .pattern { position: absolute; right: -140px; top: -140px; width: 720px; height: 720px; opacity: .3; pointer-events: none; }
   .hero-grid { position: relative; display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(28px, 5vw, 72px); max-width: 1280px; margin: 0 auto; align-items: center; }
   .hero h1 .accent { background: var(--ink); color: var(--cyan); padding: 0 .12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-  .hero p.lede { margin-top: 26px; font-size: clamp(16px, 1.6vw, 20px); line-height: 1.65; max-width: 54ch; color: rgba(255,255,255,.88); }
-  .hero .cta-row { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .hero p.lede { margin-top: 20px; font-size: clamp(16px, 1.6vw, 20px); line-height: 1.65; max-width: 54ch; color: rgba(255,255,255,.88); }
+  .hero .cta-row { margin-top: 28px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
   .hero .kbd-hint { font-family: var(--label); font-size: 13px; color: rgba(255,255,255,.92); }
   kbd { font-family: var(--label); background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.4); border-radius: 6px; padding: 2px 7px; font-size: 12px; }
 
@@ -107,7 +107,7 @@
   @keyframes pop { 45% { transform: scale(1.02); } }
 
   /* ---------- marquee tapes ---------- */
-  .tape { background: var(--ink); color: var(--ice); overflow: hidden; padding: 18px 0; }
+  .tape { background: var(--ink); color: var(--ice); overflow: hidden; padding: 13px 0; }
   .tape.alt { background: var(--cyan); color: var(--ink); }
   .tape-inner { display: flex; width: max-content; animation: tape 26s linear infinite; }
   .tape.alt .tape-inner { animation-direction: reverse; }
@@ -118,9 +118,9 @@
   @media (prefers-reduced-motion: reduce) { .tape-inner { animation: none; } }
 
   /* ---------- sections ---------- */
-  section { padding: clamp(70px, 9vw, 130px) clamp(18px, 4vw, 48px); }
+  section { padding: clamp(52px, 6.5vw, 96px) clamp(18px, 4vw, 48px); }
   .wrap { max-width: 1280px; margin: 0 auto; }
-  .sec-head { display: flex; flex-direction: column; gap: 18px; margin-bottom: clamp(36px, 5vw, 64px); }
+  .sec-head { display: flex; flex-direction: column; gap: 14px; margin-bottom: clamp(26px, 3.6vw, 44px); }
   .seo-sub { font-size: 17px; line-height: 1.65; max-width: 64ch; opacity: .8; }
 
   .dark { background: var(--ink); color: var(--ice); }
@@ -174,7 +174,7 @@
   #toast.show { transform: translateX(-50%) translateY(0); }
 
   /* resolution slider — full-bleed moment in the dark band */
-  .res-head { max-width: 1280px; margin: 0 auto clamp(30px, 4vw, 54px); display: grid; grid-template-columns: auto 1fr; gap: clamp(24px, 4vw, 64px); align-items: end; }
+  .res-head { max-width: 1280px; margin: 0 auto clamp(22px, 3vw, 40px); display: grid; grid-template-columns: auto 1fr; gap: clamp(24px, 4vw, 64px); align-items: end; }
   @media (max-width: 980px) { .res-head { grid-template-columns: 1fr; } }
   .res-head p { font-size: 17px; line-height: 1.7; max-width: 52ch; color: rgba(238,237,251,.8); }
   .res-frame { position: relative; max-width: 1280px; margin: 0 auto; border: 2px solid var(--ice); border-radius: 18px; overflow: hidden; box-shadow: 12px 12px 0 rgba(6,182,212,.35); user-select: none; touch-action: none; }
@@ -195,7 +195,7 @@
   .gal-shot img { width: 100%; height: auto; display: block; border-radius: 16px; }
   .gal-sticker { position: absolute; top: -14px; right: -10px; transform: rotate(4deg); background: var(--cyan); color: var(--ink);
                  font-family: var(--label); font-weight: 700; font-size: 13px; padding: 7px 14px; border: 2px solid var(--ink); border-radius: 8px; }
-  .indigo-sec p.body { margin-top: 22px; font-size: 17px; line-height: 1.7; max-width: 46ch; color: rgba(255,255,255,.9); }
+  .indigo-sec p.body { margin-top: 18px; font-size: 17px; line-height: 1.7; max-width: 46ch; color: rgba(255,255,255,.9); }
 
   /* trust */
   .trust-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 18px; }
@@ -209,7 +209,7 @@
   .trust-card a { color: var(--indigo); font-weight: 600; }
 
   /* FAQ */
-  .faq details { background: #fff; border: 2px solid var(--ink); border-radius: 14px; margin-bottom: 12px;
+  .faq details { background: #fff; border: 2px solid var(--ink); border-radius: 14px; margin-bottom: 10px;
                  box-shadow: 5px 5px 0 rgba(14,14,26,.14); overflow: hidden; }
   .faq summary { cursor: pointer; padding: 18px 22px; font-family: var(--label); font-weight: 700; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
   .faq summary::-webkit-details-marker { display: none; }
@@ -218,19 +218,19 @@
   .faq details p { padding: 0 22px 20px; font-size: 15px; line-height: 1.65; opacity: .85; max-width: 70ch; }
 
   /* privacy */
-  .privacy .row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
+  .privacy .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
   .pill { font-family: var(--label); font-weight: 700; font-size: 14px; letter-spacing: .06em; text-transform: uppercase;
           border: 2px solid var(--cyan); color: var(--cyan); border-radius: 999px; padding: 10px 20px; }
 
   /* footer */
   footer { background: var(--indigo); color: #fff; padding: clamp(60px, 8vw, 100px) clamp(18px, 4vw, 48px) 40px; }
   footer .big { font-family: var(--display); text-transform: uppercase; font-size: var(--d1); line-height: .9; }
-  footer .cols { display: flex; gap: 48px; flex-wrap: wrap; justify-content: space-between; margin-top: 48px; align-items: flex-end; }
+  footer .cols { display: flex; gap: 40px; flex-wrap: wrap; justify-content: space-between; margin-top: 36px; align-items: flex-end; }
   footer .links { display: flex; gap: 26px; flex-wrap: wrap; font-family: var(--label); font-weight: 700; font-size: 14px; align-items: center; }
   footer a { color: #fff; text-decoration: none; }
   footer a:hover { text-decoration: underline; }
   footer .soon { opacity: .55; }
-  footer .fine { margin-top: 38px; font-size: 12.5px; opacity: .6; }
+  footer .fine { margin-top: 28px; font-size: 12.5px; opacity: .6; }
   footer .fine a { text-decoration: underline; }
 
   /* reveals — only hidden when JS is running */
@@ -267,7 +267,7 @@
   <div class="hero-grid">
     <div>
       <span class="chip rv"><i></i>Free Chrome extension</span>
-      <h1 class="rv" style="margin-top:18px">If you can<br>see it, you<br>can <span class="accent">save it.</span></h1>
+      <h1 class="rv" style="margin-top:14px">If you can<br>see it, you<br>can <span class="accent">save it.</span></h1>
       <p class="lede rv">Right-click or point-and-pick to download anything on the internet — images at the full quality the site has, logos as crisp SVG, the fonts a page uses, video, even whole sections of a design.</p>
       <div class="cta-row rv">
         <a class="btn light cta" href="#get">⬇ Add to Chrome — free</a>
@@ -331,8 +331,8 @@
   <div class="wrap demo-wrap">
     <div class="rv">
       <span class="chip"><i></i>The element picker</span>
-      <h2 style="margin-top:18px;">Point.<br>Click.<br>Yours.</h2>
-      <p style="margin-top:22px; font-size:17px; line-height:1.7; max-width:46ch; opacity:.85;">Press <kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">Alt</kbd>+<kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">Shift</kbd>+<kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">G</kbd> and point at anything. Scroll to widen the selection. Click to save it as a pixel-perfect image or a working design file.</p>
+      <h2 style="margin-top:14px;">Point.<br>Click.<br>Yours.</h2>
+      <p style="margin-top:18px; font-size:17px; line-height:1.7; max-width:46ch; opacity:.85;">Press <kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">Alt</kbd>+<kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">Shift</kbd>+<kbd style="background:#fff;border-color:var(--ink);color:var(--ink)">G</kbd> and point at anything. Scroll to widen the selection. Click to save it as a pixel-perfect image or a working design file.</p>
       <p class="try-hint">→ Try it on the fake page: <span class="mouse">hover, then click anything.</span><span class="touch">tap anything.</span></p>
     </div>
     <div class="browser rv" id="demo">
@@ -353,7 +353,7 @@
   <div class="res-head rv">
     <div>
       <span class="chip"><i></i>Full resolution</span>
-      <h2 style="margin-top:18px;">Never save the<br>thumbnail again.</h2>
+      <h2 style="margin-top:14px;">Never save the<br>thumbnail again.</h2>
     </div>
     <p>Pages render shrunken copies; the original sits on the CDN behind a size parameter. Grab Anything rewrites the URL, verifies the original exists, and downloads that instead. Drag the line — left is what sites hand you, right is what you actually get.</p>
   </div>
@@ -371,7 +371,7 @@
     <div class="gal-shot rv"><img src="assets/screenshot-gallery.png" width="1280" height="800" alt="the gallery popup listing every image a page loaded, with ZIP export"><span class="gal-sticker">87 files → one ZIP</span></div>
     <div class="rv">
       <span class="chip"><i></i>The gallery</span>
-      <h2 style="margin-top:18px;">Every file.<br>One ZIP.</h2>
+      <h2 style="margin-top:14px;">Every file.<br>One ZIP.</h2>
       <p class="body">The toolbar popup lists every image, video and font the page loaded — even files JavaScript fetched behind the scenes. Pick a few or take everything as a single archive.</p>
     </div>
   </div>
@@ -385,11 +385,11 @@
 <section class="dark privacy" id="privacy">
   <div class="wrap rv">
     <span class="chip"><i></i>Privacy</span>
-    <h2 style="margin-top:18px;">Nothing leaves<br>your machine.</h2>
+    <h2 style="margin-top:14px;">Nothing leaves<br>your machine.</h2>
     <div class="row">
       <span class="pill">No accounts</span><span class="pill">No tracking</span><span class="pill">No servers</span><span class="pill">100% local</span>
     </div>
-    <p style="margin-top:26px; max-width:60ch; line-height:1.7; color:rgba(238,237,251,.78);">No analytics, no telemetry, nothing phoned home — the code ships in the extension and runs on your device. Read the <a href="privacy.html" style="color:var(--cyan)">two-minute privacy policy</a>.</p>
+    <p style="margin-top:20px; max-width:60ch; line-height:1.7; color:rgba(238,237,251,.78);">No analytics, no telemetry, nothing phoned home — the code ships in the extension and runs on your device. Read the <a href="privacy.html" style="color:var(--cyan)">two-minute privacy policy</a>.</p>
   </div>
 </section>
 
