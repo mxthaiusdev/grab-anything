@@ -583,6 +583,26 @@ if (vready) {
   }
 }
 
+/* ---- 30. fullPageShot restores the page even when capture fails ---- */
+await page.evaluate(() => {
+  const s = document.createElement('div'); s.id = 'stk';
+  s.style.cssText = 'position:sticky;top:0;height:30px;background:#0f0';
+  const tall = document.createElement('div'); tall.style.height = '5000px';
+  document.body.append(s, tall);
+  window.scrollTo(0, 0);
+});
+// break the worker's capture so captureViewport() throws mid-run
+await sw.evaluate(() => { globalThis.__origCap = chrome.tabs.captureVisibleTab; chrome.tabs.captureVisibleTab = (w, o, cb) => cb(undefined); });
+await sw.evaluate(({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-fullshot' }, { frameId: 0 }), { tabId });
+await page.waitForTimeout(4000); // let the capture attempts fail + finally run
+const restored = await page.evaluate(() => {
+  const s = document.getElementById('stk');
+  return { vis: s.style.visibility, scrollY: window.scrollY };
+});
+check('failed full-page shot restores sticky visibility', restored.vis !== 'hidden', JSON.stringify(restored));
+check('failed full-page shot restores scroll position', restored.scrollY === 0, JSON.stringify(restored));
+await sw.evaluate(() => { chrome.tabs.captureVisibleTab = globalThis.__origCap; });
+
 /* ---- report ---- */
 console.log('\n=== Grab Anything smoke test ===');
 let failed = 0;

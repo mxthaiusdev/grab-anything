@@ -1207,6 +1207,7 @@
     const origEls = [rootEl, ...rootEl.querySelectorAll('*')];
     const cloneEls = [clone, ...clone.querySelectorAll('*')];
 
+    try {
     for (let i = 0; i < origEls.length; i++) {
       const o = origEls[i];
       const c = cloneEls[i];
@@ -1240,8 +1241,9 @@
       }
       if (decls.length) c.setAttribute('style', decls.join('; '));
     }
-
-    if (baselineSandbox) { baselineSandbox.remove(); baselineSandbox = null; }
+    } finally {
+      if (baselineSandbox) { baselineSandbox.remove(); baselineSandbox = null; }
+    }
     return finishClone(clone);
   }
 
@@ -1314,31 +1316,36 @@
     const maxCss = Math.min(document.documentElement.scrollHeight, Math.floor(16000 / devicePixelRatio));
     const startY = scrollY;
     const frames = [];
-    let hidden = [];
+    const hidden = [];
 
-    const total = Math.ceil(maxCss / innerHeight);
-    for (let y = 0; y < maxCss; y += innerHeight) {
-      scrollTo(0, y);
-      await sleep(460); // captureVisibleTab is rate-limited to ~2/sec
-      if (y > 0 && !hidden.length) {
-        // sticky headers repeat on every frame — hide them after frame one
-        for (const el of document.querySelectorAll('body *')) {
-          if (hidden.length > 40) break;
-          const pos = getComputedStyle(el).position;
-          if (pos === 'fixed' || pos === 'sticky') {
-            hidden.push([el, el.style.visibility]);
-            el.style.visibility = 'hidden';
+    // ALWAYS restore the page, even if a capture throws mid-scroll —
+    // otherwise sticky headers stay hidden and scroll stays where it stopped
+    try {
+      const total = Math.ceil(maxCss / innerHeight);
+      for (let y = 0; y < maxCss; y += innerHeight) {
+        scrollTo(0, y);
+        await sleep(460); // captureVisibleTab is rate-limited to ~2/sec
+        if (y > 0 && !hidden.length) {
+          // sticky headers repeat on every frame — hide them after frame one
+          for (const el of document.querySelectorAll('body *')) {
+            if (hidden.length > 40) break;
+            const pos = getComputedStyle(el).position;
+            if (pos === 'fixed' || pos === 'sticky') {
+              hidden.push([el, el.style.visibility]);
+              el.style.visibility = 'hidden';
+            }
           }
         }
+        toast('Capturing… ' + (frames.length + 1) + '/' + total);
+        frames.push({ y: scrollY, img: await captureViewport() });
+        if (scrollY + innerHeight >= maxCss) break;
       }
-      toast('Capturing… ' + (frames.length + 1) + '/' + total);
-      const img = await captureViewport();
-      frames.push({ y: scrollY, img });
-      if (scrollY + innerHeight >= maxCss) break;
+    } finally {
+      for (const [el, v] of hidden) el.style.visibility = v;
+      scrollTo(0, startY);
     }
-    for (const [el, v] of hidden) el.style.visibility = v;
-    scrollTo(0, startY);
 
+    if (!frames.length) { toast('Could not capture the page.'); return; }
     const scale = frames[0].img.width / innerWidth;
     const c = document.createElement('canvas');
     c.width = frames[0].img.width;
