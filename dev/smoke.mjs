@@ -549,6 +549,40 @@ if (gifPresent) {
   check('canvas records to valid animated GIF', ok, gif ? 'got gif' : 'no gif');
 }
 
+/* ---- 29. rip audio from a video element (synthetic video+oscillator) ---- */
+await page.evaluate(() => {
+  const cv = document.createElement('canvas'); cv.width = 240; cv.height = 140;
+  const x = cv.getContext('2d'); let t = 0;
+  (function loop(){ t += 0.05; x.fillStyle = 'hsl(' + (t*40%360) + ',70%,50%)'; x.fillRect(0,0,240,140); requestAnimationFrame(loop); })();
+  const ac = new AudioContext(); const osc = ac.createOscillator(); const dst = ac.createMediaStreamDestination();
+  osc.frequency.value = 440; osc.connect(dst); osc.start();
+  const combined = new MediaStream([...cv.captureStream(30).getVideoTracks(), ...dst.stream.getAudioTracks()]);
+  const v = document.createElement('video'); v.id = 'vaud'; v.width = 240; v.height = 140;
+  v.style.display = 'block'; v.srcObject = combined; v.muted = true;
+  document.body.appendChild(v); v.play();
+});
+await page.waitForTimeout(700);
+const vready = await page.evaluate(() => { const v = document.getElementById('vaud'); return v && v.videoWidth > 0; });
+check('synthetic video ready for audio test', vready);
+if (vready) {
+  await sw.evaluate(({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-picker-start' }, { frameId: 0 }), { tabId });
+  await page.waitForTimeout(250);
+  const vb = await page.locator('#vaud').boundingBox();
+  await page.mouse.move(vb.x + vb.width / 2, vb.y + 25); await page.waitForTimeout(250);
+  await page.mouse.down(); await page.mouse.up(); await page.waitForTimeout(300);
+  const gotAudioBtn = await page.evaluate(() => !!document.querySelector('[data-ga-action="record-audio"]'));
+  check('grab-audio button appears on video', gotAudioBtn);
+  if (gotAudioBtn) {
+    await page.click('[data-ga-action="record-audio"]');
+    await page.waitForTimeout(2000);
+    await page.click('[data-ga-action="record-audio"]');
+    const aud = await waitFor(async () => downloadObjs.find((d) => d.suggestedFilename() === 'vaud.webm'), 10000);
+    let akb = 0;
+    if (aud) { const { statSync } = await import('fs'); akb = Math.round(statSync(await aud.path()).size / 1024); }
+    check('video audio rips to non-empty webm', aud && akb > 1, aud ? akb + 'KB' : 'no audio');
+  }
+}
+
 /* ---- report ---- */
 console.log('\n=== Grab Anything smoke test ===');
 let failed = 0;

@@ -588,25 +588,48 @@
     if (el.tagName === 'VIDEO') return el;
     return el.querySelector ? el.querySelector('video') : null;
   }
+  function findAudio(el) {
+    if (el.tagName === 'AUDIO') return el;
+    return el.querySelector ? el.querySelector('audio') : null;
+  }
+  function elementStream(mediaEl) {
+    try {
+      if (typeof mediaEl.captureStream === 'function') return mediaEl.captureStream();
+      if (typeof mediaEl.mozCaptureStream === 'function') return mediaEl.mozCaptureStream();
+    } catch (_) {}
+    return null;
+  }
 
-  // A frame source draws the live element into an arbitrary 2D context.
-  // kind 'direct' needs no permission; 'display' uses a screen-capture prompt.
+  // A frame source can draw the live element into a 2D context (for GIF /
+  // cropped capture) and may expose a native MediaStream carrying audio.
+  // kind 'canvas'/'video'/'audio' need no permission; 'display' prompts.
   async function makeFrameSource(el) {
     const canvas = findCanvas(el);
     if (canvas) {
       const w = canvas.width || canvas.clientWidth || 640;
       const h = canvas.height || canvas.clientHeight || 360;
-      return { kind: 'direct', w, h, draw: (ctx, dw, dh) => ctx.drawImage(canvas, 0, 0, dw, dh), cleanup() {} };
+      return { kind: 'canvas', w, h, hasAudio: false,
+               draw: (ctx, dw, dh) => ctx.drawImage(canvas, 0, 0, dw, dh), cleanup() {} };
     }
     const video = findVideo(el);
     if (video && video.videoWidth) {
-      return { kind: 'direct', w: video.videoWidth, h: video.videoHeight,
-               draw: (ctx, dw, dh) => ctx.drawImage(video, 0, 0, dw, dh), cleanup() {} };
+      const native = elementStream(video);
+      return { kind: 'video', w: video.videoWidth, h: video.videoHeight, native,
+               hasAudio: !!(native && native.getAudioTracks().length),
+               draw: (ctx, dw, dh) => ctx.drawImage(video, 0, 0, dw, dh),
+               cleanup() { if (native) native.getTracks().forEach((t) => t.stop()); } };
     }
-    // anything else (CSS animations, mixed layouts) → capture the tab, crop to el
+    const audio = findAudio(el);
+    if (audio) {
+      const native = elementStream(audio);
+      return { kind: 'audio', w: 0, h: 0, native,
+               hasAudio: !!(native && native.getAudioTracks().length),
+               draw() {}, cleanup() { if (native) native.getTracks().forEach((t) => t.stop()); } };
+    }
+    // anything else (CSS animations, mixed layouts) → capture the tab + audio, crop to el
     if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 30 }, audio: false, preferCurrentTab: true,
+        video: { frameRate: 30 }, audio: true, preferCurrentTab: true,
       });
       const v = document.createElement('video');
       v.srcObject = stream; v.muted = true;
@@ -614,6 +637,7 @@
       const r0 = el.getBoundingClientRect();
       return {
         kind: 'display', w: Math.max(2, Math.round(r0.width)), h: Math.max(2, Math.round(r0.height)),
+        audioTrack: stream.getAudioTracks()[0] || null, hasAudio: !!stream.getAudioTracks().length,
         draw: (ctx, dw, dh) => {
           const r = el.getBoundingClientRect();
           const fx = v.videoWidth / innerWidth, fy = v.videoHeight / innerHeight;
@@ -631,10 +655,13 @@
     return [Math.max(2, Math.round(w * s)), Math.max(2, Math.round(h * s))];
   }
 
-  // format: 'webm' | 'gif'. Toggles: second call stops & saves.
+  const supported = (list) => list.find((m) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || list[list.length - 1];
+
+  // format: 'webm' (video, with sound when available) | 'gif' | 'audio'.
+  // Toggle: a second call stops and saves.
   async function grabMotion(el, format, btn) {
     if (activeRecorder) { activeRecorder.stop(); return; }
-    if (typeof MediaRecorder === 'undefined' && format === 'webm') { toast("This browser can't record video."); stopPicker(); return; }
+    if (typeof MediaRecorder === 'undefined' && format !== 'gif') { toast("This browser can't record."); stopPicker(); return; }
 
     let source;
     try { source = await makeFrameSource(el); }
@@ -642,76 +669,93 @@
       toast(e && e.name === 'NotAllowedError' ? 'Screen capture was cancelled.' : 'Could not start capture: ' + (e && e.message));
       stopPicker(); return;
     }
-    if (!source) { toast('Nothing animated to record here.'); stopPicker(); return; }
+    if (!source) { toast('Nothing to capture here.'); stopPicker(); return; }
 
-    const cap = format === 'gif' ? 480 : 1280;
-    const [cw, ch] = fitWithin(source.w, source.h, cap);
-    const work = document.createElement('canvas');
-    work.width = cw; work.height = ch;
-    const wctx = work.getContext('2d', { willReadFrequently: format === 'gif' });
-
-    const name = (componentName(el) || 'animation');
+    const name = (componentName(el) || 'capture');
     const startT = performance.now();
-    let rafId = 0, frameTimer = 0, recorder = null, stream = null;
+    let rafId = 0, frameTimer = 0, recorder = null, recStream = null, work = null, wctx = null, cw = 0, ch = 0;
     const gifFrames = [];
-    let stopped = false;
+    const chunks = [];
+    let mime = '', stopped = false;
 
-    const drawLoop = () => { try { source.draw(wctx, cw, ch); } catch (_) {} rafId = requestAnimationFrame(drawLoop); };
+    function save(blob, ext, label) {
+      if (stopped) return;
+      stopped = true;
+      cancelAnimationFrame(rafId); clearInterval(frameTimer); clearInterval(uiTick); clearTimeout(auto);
+      try { source.cleanup(); } catch (_) {}
+      if (recStream) recStream.getTracks().forEach((t) => t.stop());
+      activeRecorder = null;
+      if (!blob || blob.size < 200) toast('Capture came out empty — the content may block it (DRM/cross-origin).');
+      else { saveBlob(blob, name + '.' + ext); toast(label); }
+      stopPicker();
+    }
 
     function finish() {
       if (stopped) return;
-      stopped = true;
-      cancelAnimationFrame(rafId);
-      clearInterval(frameTimer);
-      clearInterval(uiTick);
-      clearTimeout(auto);
-      activeRecorder = null;
-
-      const done = (blob, ext, label) => {
-        try { source.cleanup(); } catch (_) {}
-        if (stream) stream.getTracks().forEach((t) => t.stop());
-        if (!blob || blob.size < 200) toast('Recording came out empty — the content may block capture (e.g. DRM).');
-        else { saveBlob(blob, name + '.' + ext); toast(label); }
-        stopPicker();
-      };
-
       if (format === 'gif') {
-        if (!gifFrames.length) { done(null); return; }
+        if (!gifFrames.length) { save(null); return; }
         toast('Encoding GIF…');
-        setTimeout(() => done(GrabGif.encode(gifFrames, cw, ch), 'gif', 'Saved as GIF.'), 30);
-      } else {
-        recorder.onstop = () => done(new Blob(chunks, { type: mime }), 'webm', 'Animation saved as video (.webm).');
-        if (recorder.state !== 'inactive') recorder.stop(); else recorder.onstop();
+        setTimeout(() => save(GrabGif.encode(gifFrames, cw, ch), 'gif', 'Saved as GIF.'), 30);
+        return;
       }
+      if (recorder) {
+        const ext = format === 'audio' ? 'webm' : 'webm';
+        const label = format === 'audio' ? 'Audio saved (.webm).' : 'Saved as video (.webm).';
+        recorder.onstop = () => save(new Blob(chunks, { type: mime }), ext, label);
+        if (recorder.state !== 'inactive') recorder.stop(); else recorder.onstop();
+      } else save(null);
     }
 
-    let chunks = [], mime = '';
     const uiTick = setInterval(() => {
       if (btn) btn.textContent = '■ Stop & save (' + Math.round((performance.now() - startT) / 1000) + 's)';
     }, 500);
-    const auto = setTimeout(finish, format === 'gif' ? 15000 : 60000); // gif capped tighter
+    const auto = setTimeout(finish, format === 'gif' ? 15000 : 60000);
     activeRecorder = { stop: finish };
 
-    drawLoop();
-
     if (format === 'gif') {
+      [cw, ch] = fitWithin(source.w || 480, source.h || 270, 480);
+      work = document.createElement('canvas'); work.width = cw; work.height = ch;
+      wctx = work.getContext('2d', { willReadFrequently: true });
+      const draw = () => { try { source.draw(wctx, cw, ch); } catch (_) {} rafId = requestAnimationFrame(draw); };
+      draw();
       const FPS = 12;
       frameTimer = setInterval(() => {
-        if (gifFrames.length >= 180) { finish(); return; } // ~15s hard cap
-        try {
-          const img = wctx.getImageData(0, 0, cw, ch);
-          gifFrames.push({ rgba: img.data, delayMs: 1000 / FPS });
-        } catch (e) { clearInterval(frameTimer); toast('Frames are protected (cross-origin/DRM) — can\'t make a GIF.'); finish(); }
+        if (gifFrames.length >= 180) { finish(); return; }
+        try { gifFrames.push({ rgba: wctx.getImageData(0, 0, cw, ch).data, delayMs: 1000 / FPS }); }
+        catch (e) { toast("Frames are protected (cross-origin/DRM) — can't make a GIF."); finish(); }
       }, 1000 / FPS);
       toast('Recording GIF… click Stop to save (auto-stops at 15s).');
-    } else {
-      mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
-        .find((m) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || 'video/webm';
-      try { stream = work.captureStream(30); recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12000000 }); }
-      catch (e) { toast('Recording not supported here: ' + e.message); finish(); return; }
+
+    } else if (format === 'audio') {
+      const aTracks = source.native ? source.native.getAudioTracks()
+        : (source.audioTrack ? [source.audioTrack] : []);
+      if (!aTracks.length) { toast('No grabbable audio on this element (it may be a protected stream).'); save(null); return; }
+      recStream = new MediaStream(aTracks);
+      mime = supported(['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg']);
+      try { recorder = new MediaRecorder(recStream, { mimeType: mime }); }
+      catch (e) { toast('Audio recording unsupported here: ' + e.message); save(null); return; }
       recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
       recorder.start();
-      toast('Recording the animation… click Stop to save (auto-stops at 60s).');
+      toast('Recording audio… click Stop to save (auto-stops at 60s).');
+
+    } else { // webm video
+      mime = supported(['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']);
+      if (source.kind === 'video' && source.native && source.native.getVideoTracks().length) {
+        recStream = source.native; // native element stream — carries audio
+      } else {
+        [cw, ch] = fitWithin(source.w || 1280, source.h || 720, 1280);
+        work = document.createElement('canvas'); work.width = cw; work.height = ch;
+        wctx = work.getContext('2d');
+        const draw = () => { try { source.draw(wctx, cw, ch); } catch (_) {} rafId = requestAnimationFrame(draw); };
+        draw();
+        recStream = work.captureStream(30);
+        if (source.audioTrack) { try { recStream.addTrack(source.audioTrack); } catch (_) {} }
+      }
+      try { recorder = new MediaRecorder(recStream, { mimeType: mime, videoBitsPerSecond: 12000000 }); }
+      catch (e) { toast('Recording not supported here: ' + e.message); save(null); return; }
+      recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      recorder.start();
+      toast(source.hasAudio ? 'Recording with sound… click Stop to save.' : 'Recording… click Stop to save (auto-stops at 60s).');
     }
     if (btn) btn.textContent = '■ Stop & save (0s)';
   }
@@ -921,16 +965,29 @@
     picker = { box, tag, bar: null, el: null, stack: [], depth: 0, frozen: false };
     window.addEventListener('mousemove', onPickMove, true);
     window.addEventListener('wheel', onPickWheel, { capture: true, passive: false });
-    window.addEventListener('click', onPickClick, true);
+    // pointerdown, not click: native media controls (audio/video) swallow
+    // the synthesized click via pointer capture, so click never reaches us
+    window.addEventListener('pointerdown', onPickClick, true);
+    // swallow the click that follows our selecting pointerdown, so links
+    // don't navigate and media controls don't toggle (bar clicks pass through)
+    window.addEventListener('click', swallowPageClick, true);
     window.addEventListener('keydown', onPickKey, true);
     toast('Point at anything. Scroll or ↑↓ to widen, click to grab, Esc to cancel.');
+  }
+
+  function swallowPageClick(e) {
+    if (!picker || !e.isTrusted) return;
+    if (picker.bar && e.composedPath().includes(picker.bar)) return; // let bar buttons work
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   function stopPicker() {
     if (!picker) return;
     window.removeEventListener('mousemove', onPickMove, true);
     window.removeEventListener('wheel', onPickWheel, { capture: true });
-    window.removeEventListener('click', onPickClick, true);
+    window.removeEventListener('pointerdown', onPickClick, true);
+    window.removeEventListener('click', swallowPageClick, true);
     window.removeEventListener('keydown', onPickKey, true);
     picker.box.remove();
     picker.tag.remove();
@@ -992,6 +1049,7 @@
   function onPickClick(e) {
     if (!picker) return;
     if (!e.isTrusted) return; // our own programmatic clicks (download anchors)
+    if (typeof e.button === 'number' && e.button !== 0) return; // primary only
     if (picker.bar && e.composedPath().includes(picker.bar)) return; // let bar buttons work
     e.preventDefault();
     e.stopPropagation();
@@ -1052,27 +1110,33 @@
         toast('SVG copied — paste it into Figma or a file.');
       }));
     }
-    // Motion capture: canvas/WebGL/video record with no prompt; any other
-    // element falls back to a screen-capture prompt. These buttons manage
-    // their own start/stop lifecycle, bypassing the auto-close mkBtn wrapper.
-    const hasDirect = !!(findCanvas(el) || (findVideo(el) && findVideo(el).videoWidth));
+    // Motion / audio capture. Canvas, video and audio record with no
+    // prompt; any other element uses a screen-capture prompt. These buttons
+    // run their own start/stop lifecycle, bypassing the auto-close wrapper.
+    const recordBtn = (label, action, format, bg) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.setAttribute('data-ga-action', action);
+      Object.assign(b.style, {
+        font: '13px -apple-system, system-ui, sans-serif', color: '#fff',
+        background: bg, border: 'none', borderRadius: '7px', padding: '7px 12px', cursor: 'pointer',
+      });
+      b.addEventListener('click', (ev) => { ev.stopPropagation(); grabMotion(el, format, b); });
+      return b;
+    };
+    const hasVisual = !!(findCanvas(el) || (findVideo(el) && findVideo(el).videoWidth));
+    const audioEl = findAudio(el);
     const canDisplay = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
-    if (hasDirect || canDisplay) {
-      const recordBtn = (label, action, format, bg) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = label;
-        b.setAttribute('data-ga-action', action);
-        Object.assign(b.style, {
-          font: '13px -apple-system, system-ui, sans-serif', color: '#fff',
-          background: bg, border: 'none', borderRadius: '7px', padding: '7px 12px', cursor: 'pointer',
-        });
-        b.addEventListener('click', (ev) => { ev.stopPropagation(); grabMotion(el, format, b); });
-        return b;
-      };
-      const verb = hasDirect ? 'Record video' : 'Record area';
-      bar.append(recordBtn('● ' + verb, 'record', 'webm', '#E0245E'));
+    if (hasVisual) {
+      bar.append(recordBtn('● Record video', 'record', 'webm', '#E0245E'));
       bar.append(recordBtn('◉ Save GIF', 'record-gif', 'gif', '#B91456'));
+    } else if (canDisplay && !audioEl) {
+      bar.append(recordBtn('● Record area', 'record', 'webm', '#E0245E'));
+      bar.append(recordBtn('◉ Save GIF', 'record-gif', 'gif', '#B91456'));
+    }
+    if (findVideo(el) || audioEl) {
+      bar.append(recordBtn('♪ Grab audio', 'record-audio', 'audio', '#1D9B6C'));
     }
     bar.append(mkBtn('Cancel', 'cancel', () => {}));
 
