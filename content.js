@@ -1132,16 +1132,16 @@
     const sorted = [...weights.entries()].sort((a, b) => b[1] - a[1]);
     const out = [];
     const rgb = (hex) => [1, 3, 5].map((p) => parseInt(hex.slice(p, p + 2), 16));
-    for (const [hex] of sorted) {
+    for (const [hex, weight] of sorted) {
       if (out.length >= 8) break;
       const c1 = rgb(hex);
-      if (out.some((h2) => {
-        const c2 = rgb(h2);
+      if (out.some((o) => {
+        const c2 = rgb(o.hex);
         return (c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2 + (c1[2] - c2[2]) ** 2 < 2400;
       })) continue;
-      out.push(hex);
+      out.push({ hex, weight: Math.round(weight) });
     }
-    const lum = (hex) => rgb(hex).reduce((a, v) => a + v, 0);
+    const lum = (o) => rgb(o.hex).reduce((a, v) => a + v, 0);
     return out.sort((a, b) => lum(b) - lum(a));
   }
 
@@ -1165,7 +1165,7 @@
 
   async function makePaletteCard() {
     const host = sanitize(location.hostname.replace(/^www\./, '')) || 'site';
-    const cols = collectPalette();
+    const cols = collectPalette().map((c) => c.hex);
     if (!cols.length) throw new Error('no colors found');
     const [c, ctx] = cardCanvas(host, 'color palette');
     const n = cols.length;
@@ -1235,6 +1235,21 @@
 
   function serializeSvg(svg) {
     const clone = svg.cloneNode(true);
+    // CSS-variable fills/strokes don't resolve outside the page — bake in
+    // the computed colors so the file stands alone
+    const orig = [svg, ...svg.querySelectorAll('*')];
+    const copy = [clone, ...clone.querySelectorAll('*')];
+    for (let i = 0; i < orig.length && i < copy.length; i++) {
+      for (const attr of ['fill', 'stroke']) {
+        const v = copy[i].getAttribute && copy[i].getAttribute(attr);
+        if (v && v.includes('var(')) {
+          try {
+            const resolved = getComputedStyle(orig[i])[attr];
+            if (resolved) copy[i].setAttribute(attr, resolved);
+          } catch (_) {}
+        }
+      }
+    }
     if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     if (!clone.getAttribute('xmlns:xlink') && /xlink:/.test(svg.outerHTML)) {
       clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
@@ -1453,6 +1468,79 @@
         });
         sendResponse({ ok: true, sheets: summary, found });
       }).catch((e) => sendResponse({ ok: false, error: e.message }));
+      return true;
+    }
+    // headless API: structured brand data (logo candidates, palette with
+    // weights, fonts, content images) for design tooling
+    if (msg.type === 'ga-brand-data') {
+      (async () => {
+        harvestFonts();
+        await sleep(500); // let cross-origin stylesheet fetches land
+
+        const logos = { svgs: [], imgs: [], icons: [], ogImage: null };
+        const seenSvg = new Set();
+        for (const svg of document.querySelectorAll(
+          'header svg, nav svg, a[href="/"] svg, [class*="logo" i] svg'
+        )) {
+          if (logos.svgs.length >= 3) break;
+          try {
+            const s = serializeSvg(svg);
+            if (!seenSvg.has(s) && s.length > 120) { seenSvg.add(s); logos.svgs.push(s); }
+          } catch (_) {}
+        }
+        for (const img of document.querySelectorAll(
+          'header img, nav img, a[href="/"] img, img[class*="logo" i], img[alt*="logo" i]'
+        )) {
+          if (logos.imgs.length >= 3) break;
+          const src = img.currentSrc || img.src;
+          if (src && /^https?:/.test(src) && !logos.imgs.includes(src)) logos.imgs.push(src);
+        }
+        for (const link of document.querySelectorAll('link[rel*="icon"][href]')) {
+          try { logos.icons.push(new URL(link.getAttribute('href'), location.href).href); } catch (_) {}
+        }
+        const og = document.querySelector('meta[property="og:image"][content]');
+        if (og) { try { logos.ogImage = new URL(og.content, location.href).href; } catch (_) {} }
+
+        const famOf = (el) => {
+          if (!el) return null;
+          return getComputedStyle(el).fontFamily.split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+        };
+        const heading = famOf(document.querySelector('h1, h2'));
+        const body = famOf(document.body);
+        const fonts = [];
+        const addFont = (family, role) => {
+          if (!family || fonts.some((f) => f.family.toLowerCase() === family.toLowerCase())) return;
+          const hits = fontCache.get(family.toLowerCase());
+          fonts.push({
+            family,
+            role,
+            url: hits && hits.length ? pickBestFontSrc(hits).url : null,
+          });
+        };
+        addFont(heading, 'heading');
+        addFont(body, 'body');
+        for (const name of fontNames) { if (fonts.length >= 6) break; addFont(name, null); }
+
+        const images = [];
+        const seenImg = new Set();
+        for (const img of document.querySelectorAll('img')) {
+          if (images.length >= 20) break;
+          const src = img.currentSrc || img.src;
+          if (!src || !/^https?:/.test(src) || seenImg.has(src)) continue;
+          if (img.naturalWidth < 250 || img.naturalHeight < 150) continue;
+          seenImg.add(src);
+          images.push({ url: src, w: img.naturalWidth, h: img.naturalHeight, alt: (img.alt || '').slice(0, 120) });
+        }
+
+        sendResponse({
+          ok: true,
+          title: document.title,
+          logos,
+          palette: collectPalette(),
+          fonts,
+          images,
+        });
+      })().catch((e) => sendResponse({ ok: false, error: e.message }));
       return true;
     }
     if (msg.type === 'ga-extract-selector') {
