@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumen — design studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: #14110f; background: #f4f1ea; -webkit-font-smoothing: antialiased; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 26px 60px; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo svg { width: 40px; height: 40px; }
+  .logo .word { font-family: 'Fraunces', serif; font-weight: 900; font-size: 26px; letter-spacing: -.01em; }
+  .nav-links { display: flex; gap: 34px; font-size: 15px; font-weight: 500; color: #5c554d; }
+  .hero { padding: 70px 60px 90px; display: grid; grid-template-columns: 1.15fr .85fr; gap: 60px; align-items: center; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: #b6541f; margin-bottom: 22px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 900; font-size: 76px; line-height: 1.02; letter-spacing: -.02em; }
+  h1 em { font-style: italic; font-weight: 600; color: #b6541f; }
+  .hero p { margin-top: 26px; font-size: 18px; line-height: 1.65; color: #5c554d; max-width: 44ch; }
+  .hero-card { aspect-ratio: 4/5; border-radius: 22px; background:
+      radial-gradient(120% 100% at 20% 10%, #f0c08a 0%, #d98248 38%, #8c3d2a 78%, #3a1a18 100%);
+      box-shadow: 0 40px 90px rgba(58,26,24,.32); position: relative; overflow: hidden; }
+  .hero-card::after { content: ''; position: absolute; inset: 0;
+      background: repeating-radial-gradient(circle at 70% 30%, rgba(255,255,255,.08) 0 2px, transparent 2px 22px); }
+  .hero-card .tag { position: absolute; left: 22px; bottom: 22px; color: #fff;
+      font-family: 'Fraunces', serif; font-weight: 600; font-style: italic; font-size: 22px; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo" id="brandLogo">
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Lumen logo">
+      <circle cx="20" cy="20" r="18" fill="#14110f"/>
+      <path d="M20 8 a12 12 0 0 1 0 24 a6 6 0 0 0 0 -12 a6 6 0 0 1 0 -12 Z" fill="#f4f1ea"/>
+      <circle cx="20" cy="14" r="3" fill="#b6541f"/>
+    </svg>
+    <span class="word">Lumen</span>
+  </div>
+  <div class="nav-links"><span>Work</span><span>Studio</span><span>Journal</span><span>Contact</span></div>
+</nav>
+<section class="hero">
+  <div>
+    <div class="eyebrow">Brand &amp; Type Studio</div>
+    <h1 id="headline">Design worth<br><em>stealing.</em></h1>
+    <p>We craft identities, typefaces and digital experiences for brands that refuse to blend in. Based in London, working everywhere.</p>
+  </div>
+  <div class="hero-card"><span class="tag">Aurora — 2026</span></div>
+</section>
+</body>
+</html>

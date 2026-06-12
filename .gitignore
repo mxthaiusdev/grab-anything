@@ -1,3 +1,8 @@
 dist/
 .DS_Store
 node_modules/
+
+# ad video artifacts (large; keep scripts, not renders)
+ad/*.webm
+ad/*.mp4
+ad/*.png
