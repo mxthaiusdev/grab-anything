@@ -2,6 +2,26 @@
 
 All notable changes to Grab Anything. Dates are when the version was cut.
 
+## 0.11.0 — 2026-06-12
+### Added
+- **Save / Copy as Markdown.** Grab an article or section as clean Markdown
+  (headings, links, lists, tables, code, images) from the picker or the
+  toolbar popup — for writers, researchers and note-takers.
+- **Grab design tokens.** Export a page's colour palette, fonts, type scale,
+  spacing scale, radii and shadows as JSON + CSS variables + a Tailwind
+  config, in one file — for designers.
+### Fixed (pre-ship adversarial review of the new code)
+- Nested lists no longer duplicated in Markdown output.
+- Loose text mixed with inline elements is no longer dropped (content loss).
+- Markdown special characters in prose are escaped; code fences size to the
+  content; table colspan/rowspan expand correctly; `javascript:`/`data:`
+  link targets are neutralized.
+- "Copy as Markdown" falls back to a downloaded `.md` if the clipboard is
+  blocked.
+### Notes
+- Same permissions as 0.10.x — existing users update with no new warnings.
+- Test suite hardened to 69 deterministic checks (flaky video-audio test fixed).
+
 ## 0.10.1 — 2026-06-11
 ### Fixed
 - **`Screenshot whole page` could leave the page visually broken.** If a

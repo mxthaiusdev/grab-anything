@@ -559,16 +559,18 @@ await page.evaluate(() => {
   const combined = new MediaStream([...cv.captureStream(30).getVideoTracks(), ...dst.stream.getAudioTracks()]);
   const v = document.createElement('video'); v.id = 'vaud'; v.width = 240; v.height = 140;
   v.style.display = 'block'; v.srcObject = combined; v.muted = true;
-  document.body.appendChild(v); v.play();
+  document.body.appendChild(v); v.play().catch(() => {});
 });
-await page.waitForTimeout(700);
-const vready = await page.evaluate(() => { const v = document.getElementById('vaud'); return v && v.videoWidth > 0; });
+// deterministic readiness: poll for a decoded frame rather than a fixed wait
+const vready = await waitFor(async () =>
+  await page.evaluate(() => { const v = document.getElementById('vaud'); return !!(v && v.videoWidth > 0); }), 6000);
 check('synthetic video ready for audio test', vready);
 if (vready) {
+  await page.locator('#vaud').scrollIntoViewIfNeeded();
   await sw.evaluate(({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-picker-start' }, { frameId: 0 }), { tabId });
   await page.waitForTimeout(250);
   const vb = await page.locator('#vaud').boundingBox();
-  await page.mouse.move(vb.x + vb.width / 2, vb.y + 25); await page.waitForTimeout(250);
+  await page.mouse.move(vb.x + vb.width / 2, vb.y + 25); await page.waitForTimeout(300);
   await page.mouse.down(); await page.mouse.up(); await page.waitForTimeout(300);
   const gotAudioBtn = await page.evaluate(() => !!document.querySelector('[data-ga-action="record-audio"]'));
   check('grab-audio button appears on video', gotAudioBtn);
@@ -602,6 +604,39 @@ const restored = await page.evaluate(() => {
 check('failed full-page shot restores sticky visibility', restored.vis !== 'hidden', JSON.stringify(restored));
 check('failed full-page shot restores scroll position', restored.scrollY === 0, JSON.stringify(restored));
 await sw.evaluate(() => { chrome.tabs.captureVisibleTab = globalThis.__origCap; });
+
+/* ---- 31. save page as Markdown ---- */
+await page.evaluate(() => {
+  const a = document.createElement('article'); a.id = 'art';
+  a.innerHTML = '<h1>Test Title</h1><p>First paragraph with <strong>bold</strong> and a <a href="/doc.pdf">link</a> and [brackets].</p><h2>Sub</h2><ul><li>one<ul><li>nested-child</li></ul></li><li>two</li></ul><div>Loose intro text before <a href="/x">alink</a></div><table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td colspan=2>spanned</td><td>c</td></tr></table><blockquote>quote here</blockquote>';
+  document.body.appendChild(a);
+});
+await sw.evaluate(({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-markdown-page' }, { frameId: 0 }), { tabId });
+const mdDl = await waitFor(async () => downloadObjs.find((d) => d.suggestedFilename().endsWith('.md')), 8000);
+check('page exports as .md', mdDl, pageDownloads.join(','));
+if (mdDl) {
+  const { readFileSync } = await import('fs');
+  const md = readFileSync(await mdDl.path(), 'utf8');
+  check('markdown has heading', /^#\s|\n#\s/.test(md), md.slice(0,60));
+  check('markdown converts bold + link + list', md.includes('**bold**') && md.includes('](') && /^-\s|\n-\s/.test(md), md.slice(0,200));
+  check('nested list item appears exactly once', (md.match(/nested-child/g) || []).length === 1, JSON.stringify(md.match(/nested-child/g)));
+  check('loose container text not dropped', md.includes('Loose intro text before'), md);
+  check('markdown escapes brackets in prose', md.includes('\\[brackets\\]'), md.slice(0,300));
+  check('table colspan aligns c under column C', /\| spanned \| +\| c \|/.test(md) || md.includes('| spanned |  | c |'), md);
+}
+
+/* ---- 32. design tokens export ---- */
+await sw.evaluate(({ tabId }) => chrome.tabs.sendMessage(tabId, { type: 'ga-tokens' }, { frameId: 0 }), { tabId });
+const tokDl = await waitFor(async () => downloadObjs.find((d) => d.suggestedFilename().endsWith('-design-tokens.txt')), 8000);
+check('design tokens export downloads', tokDl, pageDownloads.join(','));
+if (tokDl) {
+  const { readFileSync } = await import('fs');
+  const tok = readFileSync(await tokDl.path(), 'utf8');
+  const hasJson = tok.includes('"colors"') && tok.includes('"typeScale"');
+  const hasCss = tok.includes(':root {') && tok.includes('--color-1');
+  const hasTw = tok.includes('module.exports');
+  check('tokens include JSON + CSS vars + tailwind', hasJson && hasCss && hasTw, [hasJson,hasCss,hasTw].join(','));
+}
 
 /* ---- report ---- */
 console.log('\n=== Grab Anything smoke test ===');

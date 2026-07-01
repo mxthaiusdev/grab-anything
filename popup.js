@@ -56,6 +56,8 @@ const status = (t) => { document.getElementById('status').textContent = t; };
   document.getElementById('btnShot').addEventListener('click', sendAction('ga-fullshot'));
   document.getElementById('btnPalette').addEventListener('click', sendAction('ga-palette'));
   document.getElementById('btnFonts').addEventListener('click', sendAction('ga-fontcard'));
+  document.getElementById('btnTokens').addEventListener('click', sendAction('ga-tokens'));
+  document.getElementById('btnMd').addEventListener('click', sendAction('ga-markdown-page'));
 
   /* ---- review banner ---- */
   const { grabCount = 0, reviewDismissed = false } = await chrome.storage.local.get(['grabCount', 'reviewDismissed']);

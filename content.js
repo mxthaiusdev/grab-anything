@@ -1095,6 +1095,19 @@
     bar.append(mkBtn('Save as image', 'shot', () => pickerShot(el)));
     bar.append(mkBtn('Save design', 'design', () => exportComponent(el, componentName(el) + '.html')));
     bar.append(mkBtn('Copy design', 'copy-design', () => copyDesign(el)));
+    // text-heavy element → offer a clean Markdown grab
+    if ((el.innerText || '').trim().length > 140 && el.querySelector('p, h1, h2, h3, li')) {
+      bar.append(mkBtn('Copy as Markdown', 'copy-md', async () => {
+        const md = toMarkdown(el);
+        try {
+          await navigator.clipboard.writeText(md);
+          toast('Markdown copied to clipboard.');
+        } catch (_) {
+          saveBlob(new Blob([md], { type: 'text/markdown' }), (componentName(el) || 'content') + '.md');
+          toast('Clipboard blocked — saved as .md instead.');
+        }
+      }));
+    }
     const img = el.tagName === 'IMG' ? el : el.querySelector && el.querySelector('img');
     if (el.tagName === 'IMG') {
       bar.append(mkBtn('Download image', 'download-img', () => {
@@ -1469,6 +1482,235 @@
     toast('Font card saved.');
   }
 
+  /* ---------------- HTML → Markdown ----------------
+     Converts an article/section (or the page's main content) to clean
+     Markdown. Structure-aware, strips nav/script/style chrome. */
+
+  const MD_SKIP = new Set(['script', 'style', 'noscript', 'nav', 'header', 'footer', 'aside', 'form', 'button', 'svg', 'iframe', 'template']);
+  // block-level tags that inline extraction must NOT descend into (they're
+  // handled by blockMd; recursing here would duplicate nested lists etc.)
+  const MD_BLOCK = new Set(['p', 'div', 'section', 'article', 'main', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'pre', 'blockquote', 'figure', 'figcaption', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr']);
+
+  // escape the Markdown-significant characters so page prose can't corrupt
+  const mdEsc = (s) => s.replace(/([\\`*_[\]|])/g, '\\$1');
+  // escape a leading block marker on a paragraph (#, -, >, "1.")
+  const mdEscLead = (s) => s.replace(/^(\s*)(#{1,6}\s|[-+*]\s|>\s|\d+\.\s)/, '$1\\$2');
+
+  function hasBlockChild(el) {
+    for (const c of el.children) if (MD_BLOCK.has(c.tagName.toLowerCase())) return true;
+    return false;
+  }
+
+  function pageMainContent() {
+    const cand = document.querySelector('article, main, [role="main"], [itemprop="articleBody"]');
+    if (cand) return cand;
+    let best = document.body, bestLen = 0;
+    for (const el of document.querySelectorAll('article, main, section, div')) {
+      if (el.querySelector('article, main')) continue;
+      const len = (el.innerText || '').trim().length;
+      const links = el.querySelectorAll('a').length;
+      if (len > bestLen && len > 400 && links < len / 40) { best = el; bestLen = len; }
+    }
+    return best;
+  }
+
+  // inline content only — never descends into block-level children
+  function inlineMd(node) {
+    let out = '';
+    for (const n of node.childNodes) {
+      if (n.nodeType === 3) { out += mdEsc(n.textContent.replace(/\s+/g, ' ')); continue; }
+      if (n.nodeType !== 1) continue;
+      const tag = n.tagName.toLowerCase();
+      if (MD_SKIP.has(tag) || MD_BLOCK.has(tag)) continue;
+      if (tag === 'br') { out += '  \n'; continue; }
+      if (tag === 'strong' || tag === 'b') { const t = inlineMd(n).trim(); if (t) out += '**' + t + '**'; continue; }
+      if (tag === 'em' || tag === 'i') { const t = inlineMd(n).trim(); if (t) out += '*' + t + '*'; continue; }
+      if (tag === 'code') { const t = n.textContent.trim(); if (t) out += '`' + t.replace(/`/g, '') + '`'; continue; }
+      if (tag === 'a') {
+        const t = inlineMd(n).trim();
+        let href = n.getAttribute('href') || '';
+        if (/^\s*(javascript|data|vbscript):/i.test(href)) { out += t; continue; } // neutralize
+        try { if (href && !/^(#|mailto:|tel:)/i.test(href)) href = new URL(href, location.href).href; } catch (_) {}
+        out += href && t ? '[' + t + '](' + href.replace(/[()]/g, encodeURIComponent) + ')' : t;
+        continue;
+      }
+      if (tag === 'img') { out += imgMd(n); continue; }
+      out += inlineMd(n);
+    }
+    return out;
+  }
+
+  function imgMd(img) {
+    let src = img.currentSrc || img.getAttribute('src') || img.getAttribute('data-src') || '';
+    if (!src || src.startsWith('data:')) return '';
+    try { src = new URL(src, location.href).href; } catch (_) {}
+    return '![' + (img.getAttribute('alt') || '').replace(/[\[\]\n]/g, '') + '](' + src.replace(/[()]/g, encodeURIComponent) + ')';
+  }
+
+  function listMd(listEl, depth) {
+    const ordered = listEl.tagName.toLowerCase() === 'ol';
+    const lines = [];
+    let i = 1;
+    for (const li of listEl.children) {
+      if (li.tagName.toLowerCase() !== 'li') continue;
+      const bullet = ordered ? (i++) + '. ' : '- ';
+      // the li's own inline content (inlineMd skips nested ul/ol via MD_BLOCK)
+      const own = mdEscLead(inlineMd(li).trim());
+      lines.push('  '.repeat(depth) + bullet + own);
+      // then its nested lists, one level deeper
+      for (const child of li.children) {
+        const ct = child.tagName.toLowerCase();
+        if (ct === 'ul' || ct === 'ol') lines.push(listMd(child, depth + 1));
+      }
+    }
+    return lines.join('\n');
+  }
+
+  function blockMd(el, depth) {
+    if (depth > 80) return (el.innerText || '').trim(); // pathological-nesting guard
+    const parts = [];
+    for (const node of el.children) {
+      const tag = node.tagName.toLowerCase();
+      if (MD_SKIP.has(tag)) continue;
+      if (/^h[1-6]$/.test(tag)) {
+        const t = inlineMd(node).trim();
+        if (t) parts.push('#'.repeat(+tag[1]) + ' ' + t);
+      } else if (tag === 'p') {
+        const t = mdEscLead(inlineMd(node).trim());
+        if (t) parts.push(t);
+      } else if (tag === 'ul' || tag === 'ol') {
+        const t = listMd(node, depth);
+        if (t.trim()) parts.push(t);
+      } else if (tag === 'blockquote') {
+        const t = blockMd(node, depth + 1).split('\n').map((l) => l ? '> ' + l : '>').join('\n');
+        if (t.trim()) parts.push(t);
+      } else if (tag === 'pre') {
+        const code = node.textContent.replace(/\n$/, '');
+        if (code.trim()) {
+          const run = (code.match(/`+/g) || []).reduce((m, s) => Math.max(m, s.length), 0);
+          const fence = '`'.repeat(Math.max(3, run + 1));
+          parts.push(fence + '\n' + code + '\n' + fence);
+        }
+      } else if (tag === 'hr') {
+        parts.push('---');
+      } else if (tag === 'img') {
+        const m = imgMd(node); if (m) parts.push(m);
+      } else if (tag === 'figure') {
+        const img = node.querySelector('img'); const cap = node.querySelector('figcaption');
+        if (img) { const m = imgMd(img); if (m) parts.push(m); }
+        if (cap) { const t = inlineMd(cap).trim(); if (t) parts.push('*' + t + '*'); }
+      } else if (tag === 'table') {
+        const t = tableMd(node); if (t) parts.push(t);
+      } else if (hasBlockChild(node)) {
+        const inner = blockMd(node, depth + 1);
+        if (inner.trim()) parts.push(inner);
+      } else {
+        // inline-only container (e.g. <div>text <a>link</a></div>) — don't drop the text
+        const t = mdEscLead(inlineMd(node).trim());
+        if (t) parts.push(t);
+      }
+    }
+    return parts.filter(Boolean).join('\n\n');
+  }
+
+  function tableMd(table) {
+    const trs = [...table.querySelectorAll('tr')];
+    if (!trs.length) return '';
+    const grid = [];
+    const carry = new Map(); // colIndex -> remaining rows to blank-fill (rowspan)
+    for (const tr of trs) {
+      const row = [];
+      let col = 0;
+      const cells = [...tr.children].filter((c) => /^(td|th)$/i.test(c.tagName));
+      let ci = 0;
+      while (ci < cells.length || [...carry.keys()].some((k) => k >= col)) {
+        if (carry.get(col) > 0) { row[col] = ''; carry.set(col, carry.get(col) - 1); if (!carry.get(col)) carry.delete(col); col++; continue; }
+        if (ci >= cells.length) break;
+        const cell = cells[ci++];
+        const text = inlineMd(cell).trim().replace(/\|/g, '\\|') || ' ';
+        const cs = Math.max(1, parseInt(cell.getAttribute('colspan'), 10) || 1);
+        const rs = Math.max(1, parseInt(cell.getAttribute('rowspan'), 10) || 1);
+        for (let k = 0; k < cs; k++) { row[col] = k === 0 ? text : ' '; if (rs > 1) carry.set(col, rs - 1); col++; }
+      }
+      grid.push(row);
+    }
+    const cols = Math.max(...grid.map((r) => r.length));
+    if (!cols) return '';
+    const line = (r) => '| ' + Array.from({ length: cols }, (_, i) => r[i] || ' ').join(' | ') + ' |';
+    const out = [line(grid[0]), '| ' + Array(cols).fill('---').join(' | ') + ' |'];
+    for (let i = 1; i < grid.length; i++) out.push(line(grid[i]));
+    return out.join('\n');
+  }
+
+  function toMarkdown(rootEl) {
+    const title = rootEl === pageMainContent() ? (document.title || '').trim() : '';
+    let md = blockMd(rootEl, 0).replace(/\n{3,}/g, '\n\n').trim();
+    if (title && !md.startsWith('# ')) md = '# ' + mdEsc(title) + '\n\n' + md;
+    md += '\n\n---\n_Saved from ' + location.href + '_\n';
+    return md;
+  }
+
+  /* ---------------- design tokens ---------------- */
+
+  function collectDesignTokens() {
+    const host = sanitize(location.hostname.replace(/^www\./, '')) || 'site';
+    const colors = collectPalette().map((c) => c.hex); // weighted, deduped
+    harvestFonts();
+
+    const sizes = new Map(), families = new Map(), radii = new Map(), shadows = new Map(), spaces = new Map();
+    const bump = (map, key) => { if (key) map.set(key, (map.get(key) || 0) + 1); };
+    const px = (v) => { const n = parseFloat(v); return Number.isFinite(n) && n > 0 && n < 400 ? Math.round(n) : null; };
+
+    let i = 0;
+    for (const el of document.querySelectorAll('body, body *')) {
+      if (++i > 1500) break;
+      const cs = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      const fam = cs.fontFamily.split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+      if (fam) bump(families, fam);
+      const fs = px(cs.fontSize); if (fs) bump(sizes, fs);
+      const rad = px(cs.borderTopLeftRadius); if (rad) bump(radii, rad);
+      if (cs.boxShadow && cs.boxShadow !== 'none') bump(shadows, cs.boxShadow);
+      for (const p of [cs.paddingTop, cs.paddingLeft, cs.marginTop, cs.gap]) { const s = px(p); if (s) bump(spaces, s); }
+    }
+
+    const top = (map, n) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map((e) => e[0]);
+    const typeScale = top(sizes, 8).sort((a, b) => a - b);
+    const spaceScale = top(spaces, 8).sort((a, b) => a - b);
+
+    const tokens = {
+      source: location.href,
+      generatedBy: 'Grab Anything',
+      colors,
+      fonts: top(families, 4),
+      typeScale: typeScale.map((n) => n + 'px'),
+      spacingScale: spaceScale.map((n) => n + 'px'),
+      radii: top(radii, 5).sort((a, b) => a - b).map((n) => n + 'px'),
+      shadows: top(shadows, 3),
+    };
+
+    const cssVars = [':root {',
+      ...colors.map((c, n) => '  --color-' + (n + 1) + ': ' + c + ';'),
+      ...tokens.fonts.map((f, n) => '  --font-' + (n + 1) + ": '" + f + "';"),
+      ...typeScale.map((n, x) => '  --text-' + (x + 1) + ': ' + n + 'px;'),
+      ...spaceScale.map((n, x) => '  --space-' + (x + 1) + ': ' + n + 'px;'),
+      ...tokens.radii.map((r, n) => '  --radius-' + (n + 1) + ': ' + r + ';'),
+      '}'].join('\n');
+
+    const tailwind = 'module.exports = {\n  theme: {\n    extend: {\n      colors: {\n'
+      + colors.map((c, n) => "        brand" + (n + 1) + ": '" + c + "',").join('\n')
+      + '\n      },\n      fontFamily: {\n'
+      + tokens.fonts.map((f, n) => "        f" + (n + 1) + ": ['" + f + "'],").join('\n')
+      + '\n      },\n    },\n  },\n};\n';
+
+    const file = '/* Design tokens — ' + host + ' — via Grab Anything */\n\n'
+      + '/* ---- tokens.json ---- */\n' + JSON.stringify(tokens, null, 2) + '\n\n'
+      + '/* ---- variables.css ---- */\n' + cssVars + '\n\n'
+      + '/* ---- tailwind.config.js ---- */\n' + tailwind;
+    return { host, file };
+  }
+
   /* ---------------- export (content-side downloads) ---------------- */
 
   function clickAnchor(a) {
@@ -1659,6 +1901,29 @@
     }
     if (msg.type === 'ga-fontcard') {
       if (window === window.top) makeFontCard().catch((e) => toast('Font card failed: ' + e.message));
+      sendResponse({ ok: true });
+      return;
+    }
+    if (msg.type === 'ga-markdown-page') {
+      if (window === window.top) {
+        try {
+          const el = pageMainContent();
+          const md = toMarkdown(el);
+          saveBlob(new Blob([md], { type: 'text/markdown' }), (sanitize(document.title) || 'page') + '.md');
+          toast('Saved page as Markdown.');
+        } catch (e) { toast('Markdown export failed: ' + e.message); }
+      }
+      sendResponse({ ok: true });
+      return;
+    }
+    if (msg.type === 'ga-tokens') {
+      if (window === window.top) {
+        try {
+          const { host, file } = collectDesignTokens();
+          saveBlob(new Blob([file], { type: 'text/plain' }), host + '-design-tokens.txt');
+          toast('Design tokens saved (JSON + CSS + Tailwind).');
+        } catch (e) { toast('Token export failed: ' + e.message); }
+      }
       sendResponse({ ok: true });
       return;
     }

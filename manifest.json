@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_appName__",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "__MSG_appDesc__",
   "default_locale": "en",
   "permissions": ["contextMenus", "downloads", "storage", "scripting", "webRequest", "clipboardWrite"],
