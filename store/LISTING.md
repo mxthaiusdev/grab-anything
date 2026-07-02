@@ -35,6 +35,20 @@ Press Alt+Shift+G and point at anything: it highlights with a plain-English
 label, scroll widens the selection, click saves it as a pixel-perfect image
 or a design file. Copy SVG pastes straight into Figma.
 
+RECORD ANYTHING THAT MOVES
+Capture a canvas, WebGL animation, video or any region of the page to
+video, GIF or audio — with sound. If it plays on your screen, you can save
+the motion, not just a still.
+
+SAVE AS MARKDOWN
+Grab an article or section as clean Markdown — headings, links, lists,
+tables, code and images — straight into your notes, docs or a file.
+
+GRAB DESIGN TOKENS
+Export a page's whole design system in one file: color palette, fonts, type
+scale, spacing, radii and shadows, as JSON, CSS variables and a Tailwind
+config.
+
 THE GALLERY POPUP
 The toolbar popup shows every image, video and font the page loaded — even
 files JavaScript fetched behind the scenes — as a thumbnail grid. Download
