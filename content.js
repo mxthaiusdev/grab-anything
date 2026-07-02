@@ -1095,6 +1095,22 @@
     bar.append(mkBtn('Save as image', 'shot', () => pickerShot(el)));
     bar.append(mkBtn('Save design', 'design', () => exportComponent(el, componentName(el) + '.html')));
     bar.append(mkBtn('Copy design', 'copy-design', () => copyDesign(el)));
+    // add to a collection/board (own lifecycle: stay open after adding)
+    {
+      const bBtn = document.createElement('button');
+      bBtn.type = 'button';
+      bBtn.textContent = '＋ Board';
+      bBtn.setAttribute('data-ga-action', 'add-board');
+      Object.assign(bBtn.style, {
+        font: '13px -apple-system, system-ui, sans-serif', color: '#fff',
+        background: '#7C3AED', border: 'none', borderRadius: '7px', padding: '7px 12px', cursor: 'pointer',
+      });
+      bBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        addPickToBoard(el).catch((e) => toast('Could not add to board: ' + e.message)).finally(stopPicker);
+      });
+      bar.append(bBtn);
+    }
     // text-heavy element → offer a clean Markdown grab
     if ((el.innerText || '').trim().length > 140 && el.querySelector('p, h1, h2, h3, li')) {
       bar.append(mkBtn('Copy as Markdown', 'copy-md', async () => {
@@ -1295,6 +1311,67 @@
     img.src = res.dataUrl;
     await img.decode();
     return img;
+  }
+
+  /* ---------------- collections: add the picked element to a board ---------------- */
+
+  async function svgThumb(svgText) {
+    try {
+      const url = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml' }));
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+      const iw = img.width || 180, ih = img.height || 180;
+      const s = Math.min(1, 180 / Math.max(iw, ih));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(iw * s)); c.height = Math.max(1, Math.round(ih * s));
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+      x.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      return c.toDataURL('image/jpeg', 0.75);
+    } catch (_) { return null; }
+  }
+
+  async function elementThumb(el) {
+    const r0 = el.getBoundingClientRect();
+    if (r0.top < 0 || r0.bottom > innerHeight) { el.scrollIntoView({ block: 'center' }); await sleep(400); }
+    if (picker) { picker.box.style.display = 'none'; picker.tag.style.display = 'none'; if (picker.bar) picker.bar.style.display = 'none'; }
+    await sleep(120);
+    const r = el.getBoundingClientRect();
+    const x = Math.max(0, r.left), y = Math.max(0, r.top);
+    const w = Math.min(r.right, innerWidth) - x, h = Math.min(r.bottom, innerHeight) - y;
+    if (w < 2 || h < 2) return null;
+    const img = await captureViewport();
+    const scale = img.width / innerWidth;
+    const ts = Math.min(1, 260 / Math.max(w, h)) * scale;
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w * ts)); c.height = Math.max(1, Math.round(h * ts));
+    c.getContext('2d').drawImage(img, x * scale, y * scale, w * scale, h * scale, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.72);
+  }
+
+  async function addPickToBoard(el) {
+    if (typeof GrabBoards === 'undefined') { toast('Boards unavailable — reload the page.'); return; }
+    const boardId = await GrabBoards.ensureActive('My board');
+    let item;
+    if (el.tagName === 'IMG') {
+      const url = el.currentSrc || el.src;
+      if (!url || url.startsWith('blob:')) { const t = await elementThumb(el); item = { type: 'image', thumb: t, meta: { name: 'image' } }; }
+      else item = { type: 'image', url, thumb: url.startsWith('data:') ? url : url, meta: { name: filenameFromUrl(url, 'image') } };
+    } else {
+      const svg = el.ownerSVGElement || (el.tagName.toLowerCase() === 'svg' ? el : null);
+      if (svg) {
+        const content = serializeSvg(svg);
+        item = { type: 'svg', content, thumb: await svgThumb(content), meta: { name: (svgFilename(svg) || 'graphic.svg').replace(/\.svg$/, '') } };
+      } else {
+        const thumb = await elementThumb(el);
+        if (!thumb) { toast('Could not snapshot this for the board.'); return; }
+        item = { type: 'image', thumb, meta: { name: friendlyName(el) } };
+      }
+    }
+    const r = await GrabBoards.addItem(boardId, item);
+    const { boards } = await GrabBoards.list();
+    const bname = (boards.find((b) => b.id === boardId) || {}).name || 'board';
+    toast(r && r.duplicate ? 'Already in “' + bname + '”.' : 'Added to “' + bname + '” — open Boards to organize.');
   }
 
   async function pickerShot(el) {

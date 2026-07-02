@@ -92,7 +92,7 @@ async function sendToTab(tabId, msg) {
     await chrome.tabs.sendMessage(tabId, msg, { frameId: 0 });
   } catch (_) {
     try {
-      await chrome.scripting.executeScript({ target: { tabId }, files: ['gif.js', 'content.js'] });
+      await chrome.scripting.executeScript({ target: { tabId }, files: ['gif.js', 'collections.js', 'content.js'] });
       await chrome.tabs.sendMessage(tabId, msg, { frameId: 0 });
     } catch (_) {}
   }
@@ -116,7 +116,7 @@ async function injectIntoOpenTabs() {
     if (!tab.id || !/^https?:/.test(tab.url || '')) continue;
     chrome.scripting.executeScript({
       target: { tabId: tab.id, allFrames: true },
-      files: ['gif.js', 'content.js'],
+      files: ['gif.js', 'collections.js', 'content.js'],
     }).catch(() => {});
   }
 }

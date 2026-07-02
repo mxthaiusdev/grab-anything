@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_appName__",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "__MSG_appDesc__",
   "default_locale": "en",
   "permissions": ["contextMenus", "downloads", "storage", "scripting", "webRequest", "clipboardWrite"],
@@ -32,7 +32,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["gif.js", "content.js"],
+      "js": ["gif.js", "collections.js", "content.js"],
       "run_at": "document_idle",
       "all_frames": true,
       "match_about_blank": true

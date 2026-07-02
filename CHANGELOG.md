@@ -2,6 +2,25 @@
 
 All notable changes to Grab Anything. Dates are when the version was cut.
 
+## 0.12.0 — 2026-07-02
+### Added
+- **Collections (Boards).** Save grabs into named boards — images, logos,
+  colors, fonts, links, notes — from the picker (**＋ Board**) or the toolbar
+  popup. A full board manager (🗂 Boards) with rename, reorder, delete, and
+  **Export board** → a ZIP moodboard (full-res images + a contact-sheet
+  `moodboard.html` + `colors.css` + `notes.md`). All local; `storage`
+  permission only, so it's still a silent update.
+### Fixed (pre-ship adversarial review of the new code)
+- **Stored-XSS**: the exported moodboard inlined raw page SVG (which can carry
+  `<script>`/`onload`); it now references SVG as a sandboxed `<img>`. The
+  in-page board render was already sandboxed.
+- Export image fetches now time out (a dead URL no longer hangs the export
+  forever); per-image (30MB) and total (1.2GB) caps bound memory.
+- The ZIP writer refuses to build a >4GB archive rather than silently
+  corrupting it.
+- The popup "＋ Board" flow surfaces a clear message when local storage is
+  full instead of failing silently; colors/links are sanitized on export.
+
 ## 0.11.0 — 2026-06-12
 ### Added
 - **Save / Copy as Markdown.** Grab an article or section as clean Markdown

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Boards — Grab Anything</title>
+<link rel="icon" href="icons/icon-32.png">
+<style>
+  :root { --ink:#0E0E1A; --indigo:#5757F7; --cyan:#06B6D4; --ice:#EEEDFB; color-scheme: light dark; }
+  * { margin:0; box-sizing:border-box; }
+  body { font:14px/1.5 -apple-system, system-ui, sans-serif; color:var(--ink); background:var(--ice); display:grid; grid-template-columns:270px 1fr; height:100vh; overflow:hidden; }
+  aside { background:var(--ink); color:#fff; display:flex; flex-direction:column; padding:16px 14px; overflow-y:auto; }
+  aside .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:17px; margin-bottom:18px; }
+  aside .brand img { width:26px; height:26px; border-radius:7px; }
+  .newboard { display:flex; gap:8px; margin-bottom:14px; }
+  .newboard input { flex:1; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; border-radius:8px; padding:8px 10px; font:inherit; }
+  .newboard button, .btn { cursor:pointer; border:none; border-radius:8px; font:inherit; font-weight:700; padding:8px 12px; }
+  .newboard button { background:var(--cyan); color:var(--ink); }
+  .board-item { display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:9px; cursor:pointer; color:rgba(255,255,255,.8); }
+  .board-item:hover { background:rgba(255,255,255,.08); }
+  .board-item.active { background:var(--indigo); color:#fff; }
+  .board-item .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .board-item .ct { font-size:12px; opacity:.6; }
+  aside .empty { opacity:.5; font-size:13px; padding:10px; }
+  aside .foot { margin-top:auto; padding-top:14px; font-size:12px; opacity:.5; }
+
+  main { display:flex; flex-direction:column; overflow:hidden; }
+  header { display:flex; align-items:center; gap:12px; padding:16px 22px; border-bottom:2px solid var(--ink); background:Canvas; }
+  header h1 { font-size:20px; flex:1; }
+  header h1[contenteditable] { outline:none; border-bottom:2px dashed transparent; }
+  header h1[contenteditable]:focus { border-bottom-color:var(--indigo); }
+  header .btn { background:var(--ink); color:#fff; }
+  header .btn.primary { background:var(--indigo); }
+  header .btn.danger { background:transparent; color:#c0392b; border:1px solid #c0392b; }
+  #grid { flex:1; overflow-y:auto; padding:22px; display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:14px; align-content:start; }
+  .card { position:relative; border:2px solid var(--ink); border-radius:12px; overflow:hidden; background:Canvas; box-shadow:4px 4px 0 rgba(14,14,26,.12); aspect-ratio:1; display:flex; flex-direction:column; }
+  .card img { width:100%; height:100%; object-fit:cover; }
+  .card .swatch { flex:1; }
+  .card .fontspec { flex:1; display:flex; align-items:center; justify-content:center; font-size:34px; padding:8px; }
+  .card .txt { flex:1; padding:12px; font-size:12px; overflow:hidden; }
+  .card .cap { position:absolute; left:0; right:0; bottom:0; background:rgba(14,14,26,.82); color:#fff; font-size:11px; padding:5px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card .x { position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(14,14,26,.75); color:#fff; border:none; cursor:pointer; font-size:13px; display:none; }
+  .card:hover .x { display:block; }
+  .empty-main { margin:auto; text-align:center; opacity:.6; max-width:360px; }
+  .empty-main kbd { background:rgba(127,127,127,.2); border-radius:4px; padding:1px 6px; }
+  #status { padding:8px 22px; font-size:13px; opacity:.75; min-height:20px; }
+  @media (max-width:720px){ body{ grid-template-columns:1fr; } aside{ display:none; } }
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand"><img src="icons/icon-128.png" alt="">Boards</div>
+  <div class="newboard">
+    <input id="newName" placeholder="New board name" maxlength="80">
+    <button id="newBtn">+</button>
+  </div>
+  <div id="boardList"></div>
+  <div class="foot">Everything is stored on your device.</div>
+</aside>
+<main>
+  <header>
+    <h1 id="boardTitle" contenteditable="false">Boards</h1>
+    <button class="btn primary" id="exportBtn">⬇ Export board</button>
+    <button class="btn danger" id="deleteBtn">Delete board</button>
+  </header>
+  <div id="status"></div>
+  <div id="grid"></div>
+</main>
+<script src="zip.js"></script>
+<script src="collections.js"></script>
+<script src="collections-page.js"></script>
+</body>
+</html>

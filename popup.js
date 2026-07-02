@@ -58,6 +58,10 @@ const status = (t) => { document.getElementById('status').textContent = t; };
   document.getElementById('btnFonts').addEventListener('click', sendAction('ga-fontcard'));
   document.getElementById('btnTokens').addEventListener('click', sendAction('ga-tokens'));
   document.getElementById('btnMd').addEventListener('click', sendAction('ga-markdown-page'));
+  document.getElementById('btnBoards').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('collections.html') });
+    window.close();
+  });
 
   /* ---- review banner ---- */
   const { grabCount = 0, reviewDismissed = false } = await chrome.storage.local.get(['grabCount', 'reviewDismissed']);
@@ -115,7 +119,9 @@ const status = (t) => { document.getElementById('status').textContent = t; };
     }
     if (!entriesZ.length) { status(t('statusNothing', 'Nothing could be fetched.')); return; }
     status(t('statusZipping', 'Zipping') + ' ' + entriesZ.length + '…');
-    const blob = GrabZip.buildZip(entriesZ);
+    let blob;
+    try { blob = GrabZip.buildZip(entriesZ); }
+    catch (e) { status(e.message); return; }
     const url = URL.createObjectURL(blob);
     chrome.downloads.download({ url, filename: zipName, conflictAction: 'uniquify' }, (downloadId) => {
       if (chrome.runtime.lastError || downloadId === undefined) {
@@ -183,7 +189,25 @@ const status = (t) => { document.getElementById('status').textContent = t; };
     zipAll.className = 'primary';
     zipAll.textContent = t('zipAll', 'ZIP all images') + ' · ' + images.length;
     zipAll.addEventListener('click', () => zipAndDownload(images, host + '-images.zip'));
-    zipbar.append(zipSel, zipAll);
+    const toBoard = document.createElement('button');
+    toBoard.textContent = '＋ Board';
+    toBoard.disabled = true;
+    toBoard.addEventListener('click', async () => {
+      const chosen = [...selected];
+      if (!chosen.length || typeof GrabBoards === 'undefined') return;
+      try {
+        const boardId = await GrabBoards.ensureActive('My board');
+        let added = 0;
+        for (const e of chosen) { await GrabBoards.addItem(boardId, { type: 'image', url: e.url, thumb: e.url, meta: { name: leaf(e.url) } }); added++; }
+        status('Added ' + added + ' to a board. Open Boards to organize.');
+      } catch (_) {
+        status('Board storage is full — remove some items in Boards, then try again.');
+      }
+    });
+    // keep the board button's enabled state in sync with the selection
+    const syncBtns = () => { toBoard.disabled = !selected.size; };
+    grid.addEventListener('click', syncBtns);
+    zipbar.append(zipSel, zipAll, toBoard);
     group.append(zipbar);
     list.append(group);
   }

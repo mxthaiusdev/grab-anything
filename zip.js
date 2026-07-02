@@ -22,6 +22,10 @@
 
   // entries: [{ name: 'folder/file.png', data: Uint8Array }] -> Blob
   function buildZip(entries) {
+    // This is a store-only, non-ZIP64 writer: offsets/sizes are 32-bit.
+    // Refuse to build past ~4GB rather than emit a silently-corrupt archive.
+    const est = entries.reduce((s, e) => s + (e.data ? e.data.length : 0) + (e.name ? e.name.length : 0) + 80, 0);
+    if (est > 0xFFFF0000) throw new Error('archive too large (over 4GB) — export fewer or smaller items');
     const encoder = new TextEncoder();
     const chunks = [];
     const central = [];

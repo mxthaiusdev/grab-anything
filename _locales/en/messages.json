@@ -187,5 +187,8 @@
  },
  "popupMarkdown": {
   "message": "Markdown"
+ },
+ "popupBoards": {
+  "message": "Boards"
  }
 }

@@ -11,7 +11,7 @@ STAGE=$(mktemp -d)
 mkdir -p dist
 
 cp -R manifest.json background.js content.js gif.js popup.html popup.js \
-      options.html options.js onboarding.html i18n.js zip.js icons _locales "$STAGE/"
+      options.html options.js onboarding.html i18n.js zip.js collections.js collections.html collections-page.js icons _locales "$STAGE/"
 
 node -e "
 const fs = require('fs');
